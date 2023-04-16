@@ -1,0 +1,13 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+          issuer-uri: https://securetoken.google.com/c2c-ehailing
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
