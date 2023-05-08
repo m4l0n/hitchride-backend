@@ -1,15 +1,13 @@
 package com.m4l0n.hitchride.controller;
 
+import com.m4l0n.hitchride.dto.UserDTO;
+import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.UserMapper;
 import com.m4l0n.hitchride.pojos.User;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.security.Principal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -25,9 +23,29 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public Response getProfile(Principal principal) {
-        User user = userService.getProfile();
+    public Response getProfile() {
+        try {
+            User user = userService.getProfile();
 
-        return ResponseAPI.positiveResponse(userMapper.toDto(user));
+            return ResponseAPI.positiveResponse(userMapper.toDto(user));
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @PostMapping("/create")
+    public Response createUser(@RequestBody UserDTO userDTO) {
+        try {
+            User user = userMapper.toEntity(userDTO);
+            User createdUser = userService.createUser(user);
+
+            if (createdUser == null) {
+                throw new Exception("User already exists");
+            }
+
+            return ResponseAPI.positiveResponse(userMapper.toDto(createdUser));
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
     }
 }

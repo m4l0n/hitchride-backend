@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.Optional;
 
@@ -17,6 +18,13 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ResponseBody
+    @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public NegativeResponse handleNotFoundException(Exception ex) {
+        return ResponseAPI.negativeResponse(StatusCode.NOT_FOUND, ex.getMessage(), ex);
+    }
 
     @ResponseBody
     @ExceptionHandler(Throwable.class)
@@ -30,6 +38,6 @@ public class GlobalExceptionHandler {
     private NegativeResponse handleDefault(Throwable ex) {
         log.error("Error while processing the request", ex);
         return ResponseAPI.negativeResponse(StatusCode.INTERNAL_SERVER_ERROR, defaultIfNull(ex.getMessage(),
-                "Error while processing the request"), ex);
+                "Error while processing the request"), null);
     }
 }
