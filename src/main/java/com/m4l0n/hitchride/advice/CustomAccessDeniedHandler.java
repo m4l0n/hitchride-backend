@@ -1,7 +1,9 @@
 package com.m4l0n.hitchride.advice;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.Gson;
+import com.m4l0n.hitchride.response.Response;
+import com.m4l0n.hitchride.response.ResponseAPI;
+import com.m4l0n.hitchride.response.StatusCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +11,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 import java.io.IOException;
-import java.time.LocalDate;
 
 @Slf4j
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
@@ -20,14 +21,11 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletResponse response,
             AccessDeniedException exc) throws IOException {
 
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.add("timestamp", new JsonPrimitive(LocalDate.now().toString()));
-        jsonObject.add("status", new JsonPrimitive(403));
-        jsonObject.add("message", new JsonPrimitive("Access denied"));
+        Response negResponse = ResponseAPI.negativeResponse(StatusCode.UNAUTHORIZED, "Access denied", null);
 
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(403);
-        response.getWriter().write(jsonObject.toString());
+        response.getWriter().write(new Gson().toJson(negResponse));
         response.getWriter().flush();
     }
 }

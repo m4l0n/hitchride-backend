@@ -14,3 +14,7 @@ logging:
 
 server:
   port: ${PORT:8080}
+  error:
+    whitelabel:
+      enabled: false
+    path: /error
