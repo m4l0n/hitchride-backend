@@ -11,10 +11,13 @@ logging:
     org:
       springframework:
         security: DEBUG
+        web: DEBUG
 
 server:
   port: ${PORT:8080}
-  error:
-    whitelabel:
-      enabled: false
-    path: /error
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

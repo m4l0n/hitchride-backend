@@ -7,10 +7,13 @@ import com.m4l0n.hitchride.pojos.User;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@SecurityRequirement(name = "bearerAuth")
+@RequestMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController {
 
     private final UserService userService;
