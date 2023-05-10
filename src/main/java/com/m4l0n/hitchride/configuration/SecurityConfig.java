@@ -8,8 +8,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -24,8 +24,13 @@ public class SecurityConfig {
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",
             "/swagger-ui/**",
+            "/swagger-ui.html",
             "/v3/api-docs",
-            "/webjars/**"
+            "/v3/api-docs/**",
+            "/configuration/ui",
+            "/swagger-resources/**",
+            "/webjars/**",
+            "/error"
     };
 
     public SecurityConfig(FirebaseFilter firebaseFilter) {
@@ -35,7 +40,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity
-                .addFilterBefore(firebaseFilter, BearerTokenAuthenticationFilter.class)
                 .cors().and().csrf().disable()
                 .authorizeHttpRequests((authz) -> authz
                         .requestMatchers(AUTH_WHITELIST).permitAll()
@@ -47,7 +51,8 @@ public class SecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults())
                 .exceptionHandling()
-                    .accessDeniedHandler(new CustomAccessDeniedHandler());
+                    .accessDeniedHandler(new CustomAccessDeniedHandler()).and()
+                .addFilterBefore(firebaseFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity.oauth2ResourceServer().jwt();
         return httpSecurity.build();
     }
