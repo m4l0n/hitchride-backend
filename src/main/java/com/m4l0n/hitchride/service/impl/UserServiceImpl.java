@@ -106,6 +106,8 @@ public class UserServiceImpl implements UserService {
         }
         return null;
     }
+
+
     @Override
     public User loadUserByUsername(String username) throws ExecutionException, InterruptedException {
         ApiFuture<DocumentSnapshot> documentSnapshot = userRef.document(username)
@@ -120,9 +122,11 @@ public class UserServiceImpl implements UserService {
             return null;
         }
     }
+
         } else {
-            user = null;
+            return null;
         }
+    }
 
     public User mapToUserObject(DocumentSnapshot data){
         String userId = (String) data.get("userId");
