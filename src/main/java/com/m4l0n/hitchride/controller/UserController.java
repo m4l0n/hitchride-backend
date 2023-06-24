@@ -75,8 +75,4 @@ public class UserController {
             throw new HitchrideException(e.getMessage());
         }
     }
-        } catch (Exception e) {
-            throw new HitchrideException(e.getMessage());
-        }
-    }
 }
