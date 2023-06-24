@@ -32,6 +32,7 @@ public class UserController {
 
             return ResponseAPI.positiveResponse(user);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HitchrideException(e.getMessage());
         }
     }
@@ -46,6 +47,34 @@ public class UserController {
             }
 
             return ResponseAPI.positiveResponse(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @PostMapping("/update")
+    public Response updateUser(@RequestBody User user) {
+        try {
+            User updatedUser = userService.updateUser(user);
+
+            return ResponseAPI.positiveResponse(updatedUser);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getSavedLocations")
+    public Response getUserSavedLocations() {
+        try {
+            Map<String, GeoPoint> userSavedLocations = userService.getUserSavedLocations();
+
+            return ResponseAPI.positiveResponse(userSavedLocations);
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
+    }
         } catch (Exception e) {
             throw new HitchrideException(e.getMessage());
         }
