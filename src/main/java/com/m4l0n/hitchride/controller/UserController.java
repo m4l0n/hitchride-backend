@@ -65,14 +65,4 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getSavedLocations")
-    public Response getUserSavedLocations() {
-        try {
-            Map<String, GeoPoint> userSavedLocations = userService.getUserSavedLocations();
-
-            return ResponseAPI.positiveResponse(userSavedLocations);
-        } catch (Exception e) {
-            throw new HitchrideException(e.getMessage());
-        }
-    }
 }
