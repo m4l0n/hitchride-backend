@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
@@ -27,6 +26,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -121,6 +122,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String updateUserProfilePicture(MultipartFile imageFile) throws IOException, ExecutionException, InterruptedException {
+        String error = userValidator.validateProfilePicture(imageFile);
+        if (!error.isEmpty()) {
+            throw new HitchrideException(error);
+        }
+        //Upload image to Firebase Storage
+        String imageUrl = uploadImageToStorage(imageFile);
+        //Update user profile picture in Firestore
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        ApiFuture<WriteResult> result = userRef.document(currentLoggedInUser)
+                .update("userProfilePicture", imageUrl);
+        //Wait for the result to finish
+        result.get();
+        return imageUrl;
+    }
+
+    @Override
     public User loadUserByUsername(String username) throws ExecutionException, InterruptedException {
         ApiFuture<DocumentSnapshot> documentSnapshot = userRef.document(username)
                 .get();
@@ -141,6 +159,18 @@ public class UserServiceImpl implements UserService {
     }
 
     public User mapToUserObject(DocumentSnapshot data){
+    private String uploadImageToStorage(MultipartFile imageFile) throws IOException {
+        String fileName = UUID.randomUUID() + StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
+        String storageFileName = "images/" + fileName;
+
+        BlobId blobId = BlobId.of(firebaseStorageBucket.getName(), storageFileName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
+                .setContentType(imageFile.getContentType())
+                .build();
+        firebaseStorageBucket.getStorage()
+                .create(blobInfo, imageFile.getBytes());
+        return "https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media".formatted(firebaseStorageBucket.getName(), URLEncoder.encode(storageFileName, StandardCharsets.UTF_8));
+    }
         String userId = (String) data.get("userId");
         String userName = (String) data.get("userName");
         String userEmail = (String) data.get("userEmail");

@@ -19,5 +19,16 @@ public interface UserService {
 
     User updateUserPoints(int points) throws ExecutionException, InterruptedException;
 
+    String updateUserProfilePicture(MultipartFile imageFile) throws IOException, ExecutionException, InterruptedException;
+
     User loadUserByUsername(String username) throws ExecutionException, InterruptedException;
+
+    Map<String, GeoPoint> getUserSavedLocations() throws ExecutionException, InterruptedException;
+
+    Map<String, GeoPoint> saveUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException;
+
+    Map<String, GeoPoint> deleteUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException;
+
+    Map<String, GeoPoint> updateUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException;
+
 }

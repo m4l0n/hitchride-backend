@@ -75,8 +75,18 @@ public class UserController {
             throw new HitchrideException(e.getMessage());
         }
     }
+
+    @PostMapping("/profile-picture/upload")
+    public Response uploadProfilePicture(@RequestParam("file") MultipartFile file) {
+        try {
+            String profilePictureUrl = userService.updateUserProfilePicture(file);
+
+            return ResponseAPI.positiveResponse(profilePictureUrl);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HitchrideException(e.getMessage());
         }
     }
+
+
 }
