@@ -36,17 +36,4 @@ public class DriverJourneyController {
         }
 
     }
-
-    @PostMapping("/acceptDriverJourney")
-    public Response acceptDriverJourney(@RequestBody DriverJourney driverJourney) {
-
-        try {
-            DriverJourney newDriverJourney = driverJourneyService.acceptDriverJourney(driverJourney);
-
-            return ResponseAPI.positiveResponse(newDriverJourney);
-        } catch (Exception e) {
-            throw new HitchrideException(e.getMessage());
-        }
-
-    }
 }
