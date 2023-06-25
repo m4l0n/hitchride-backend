@@ -11,6 +11,6 @@ public interface RideService {
 
     Ride acceptRide(Ride ride) throws ExecutionException, InterruptedException;
 
-    List<Ride> getDriveHistory() throws ExecutionException, InterruptedException;
+    List<Ride> getRecentDrives() throws ExecutionException, InterruptedException;
 
 }

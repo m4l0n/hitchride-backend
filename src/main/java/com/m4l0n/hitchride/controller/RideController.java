@@ -48,4 +48,15 @@ public class RideController {
         }
     }
 
+    @GetMapping("/getRecentDrives")
+    public Response getRecentDrives() {
+        try {
+            List<Ride> rides = rideService.getRecentDrives();
+
+            return ResponseAPI.positiveResponse(rides);
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
 }

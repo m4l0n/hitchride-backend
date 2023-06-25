@@ -40,8 +40,22 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public List<Ride> getRecentRides() throws ExecutionException, InterruptedException {
-        List<Ride> rides = getRideHistory();
-        return rides.subList(0, Math.min(rides.size(), 5));
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        List<Ride> rides;
+
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
+                .whereEqualTo("ridePassenger.userId", currentLoggedInUser)
+                .limit(5)
+                .get();
+        QuerySnapshot document = querySnapshot.get();
+
+        if (!document.isEmpty()) {
+            rides = document.toObjects(Ride.class);
+        } else {
+            rides = List.of();
+        }
+
+        return rides;
     }
 
     @Override
@@ -68,12 +82,14 @@ public class RideServiceImpl implements RideService {
         return ride;
     }
 
-    private List<Ride> getRideHistory() throws ExecutionException, InterruptedException {
+    @Override
+    public List<Ride> getRecentDrives() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         List<Ride> rides;
 
         ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
-                .whereEqualTo("ridePassenger.userId", currentLoggedInUser)
+                .whereEqualTo("rideDriverJourney.djDriver.userId", currentLoggedInUser)
+                .limit(5)
                 .get();
         QuerySnapshot document = querySnapshot.get();
 
@@ -85,11 +101,5 @@ public class RideServiceImpl implements RideService {
 
         return rides;
     }
-
-    @Override
-    public List<Ride> getDriveHistory() throws ExecutionException, InterruptedException {
-        return null;
-    }
-
 
 }
