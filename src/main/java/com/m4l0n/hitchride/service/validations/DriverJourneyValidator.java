@@ -7,7 +7,9 @@ public class DriverJourneyValidator {
 
     public String validateCreateDriverJourney(DriverJourney driverJourney) {
         StringBuilder errors = new StringBuilder();
-        this.validateDriverJourneyLocation(errors, driverJourney.getDjOrigin(), driverJourney.getDjDestination());
+        this.validateDriverJourneyLocation(errors, driverJourney.getDjLocationData()
+                .getOrigin(), driverJourney.getDjLocationData()
+                .getDestination());
 
         return errors.toString();
     }
