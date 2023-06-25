@@ -16,5 +16,8 @@ public interface UserService {
     User createUser(User user) throws ExecutionException, InterruptedException;
 
     User updateUser(User user) throws ExecutionException, InterruptedException, JsonProcessingException;
+
+    User updateUserPoints(int points) throws ExecutionException, InterruptedException;
+
     User loadUserByUsername(String username) throws ExecutionException, InterruptedException;
 }
