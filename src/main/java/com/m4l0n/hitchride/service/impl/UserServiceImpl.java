@@ -135,11 +135,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-        } else {
-            return null;
-        }
-    }
-
     public User mapToUserObject(DocumentSnapshot data){
         String userId = (String) data.get("userId");
         String userName = (String) data.get("userName");

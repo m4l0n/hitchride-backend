@@ -1,6 +1,5 @@
 package com.m4l0n.hitchride.controller;
 
-import com.google.cloud.firestore.GeoPoint;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.User;
 import com.m4l0n.hitchride.response.Response;
@@ -9,9 +8,6 @@ import com.m4l0n.hitchride.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Map;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -61,21 +57,6 @@ public class UserController {
             return ResponseAPI.positiveResponse(updatedUser);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new HitchrideException(e.getMessage());
-        }
-    }
-
-    @GetMapping("/getSavedLocations")
-    public Response getUserSavedLocations() {
-        try {
-            Map<String, GeoPoint> userSavedLocations = userService.getUserSavedLocations();
-
-            return ResponseAPI.positiveResponse(userSavedLocations);
-        } catch (Exception e) {
-            throw new HitchrideException(e.getMessage());
-        }
-    }
-        } catch (Exception e) {
             throw new HitchrideException(e.getMessage());
         }
     }
