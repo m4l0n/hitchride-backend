@@ -10,16 +10,12 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.mapping.LocalDateTypeAdapter;
 import com.m4l0n.hitchride.pojos.DriverInfo;
 import com.m4l0n.hitchride.pojos.User;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.UserValidator;
-import com.m4l0n.hitchride.utility.LocalDateConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -28,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,9 +46,7 @@ public class UserServiceImpl implements UserService {
         this.firebaseStorageBucket = firebaseStorageBucket;
         this.authenticationService = authenticationService;
         userValidator = new UserValidator();
-        gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDate.class, new LocalDateTypeAdapter())
-                .create();
+        gson = new Gson();
         objectMapper = new ObjectMapper();
     }
 
@@ -78,12 +71,10 @@ public class UserServiceImpl implements UserService {
         User findUser = loadUserByUsername(user.getUserId());
         if (findUser == null) {
             DriverInfo userDriverInfo = user.getUserDriverInfo();
-            userDriverInfo.setDiDateJoined(LocalDate.now());
-            //Convert to map before saving to Firestore, due to LocalDate serialization issues
-            Map<String, Object> userMap = gson.fromJson(gson.toJson(user), new TypeToken<>() {
-            });
+            userDriverInfo.setDiDateJoinedTimestamp(Timestamp.now()
+                    .getSeconds());
             ApiFuture<WriteResult> result = userRef.document(user.getUserId())
-                    .set(userMap);
+                    .set(user);
             //Wait for the result to finish
             result.get();
             return user;
@@ -241,22 +232,19 @@ public class UserServiceImpl implements UserService {
         String diCarModel = (String) data.get("diCarModel");
         String diCarColor = (String) data.get("diCarColor");
         String diCarLicensePlate = (String) data.get("diCarLicensePlate");
-        Timestamp diDateJoinedTimestamp = (Timestamp) data.get("diDateJoined");
-        Timestamp diDateCarBoughtTimestamp = (Timestamp) data.get("diDateCarBought");
+        Long diDateJoinedTimestamp = ((Number) data.get("diDateJoined")).longValue();
+        Long diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBought")).longValue();
         Boolean diIsCarSecondHand = (Boolean) data.get("diIsCarSecondHand");
         Integer diRating = ((Number) data.get("diRating")).intValue();
-
-        LocalDate diDateJoined = LocalDateConverter.fromFirestoreTimestamp(diDateJoinedTimestamp != null ? diDateJoinedTimestamp : Timestamp.now());
-        LocalDate diDateCarBought = LocalDateConverter.fromFirestoreTimestamp(diDateCarBoughtTimestamp != null ? diDateCarBoughtTimestamp : Timestamp.now());
 
         DriverInfo driverInfo = new DriverInfo();
         driverInfo.setDiCarBrand(diCarBrand);
         driverInfo.setDiCarModel(diCarModel);
         driverInfo.setDiCarColor(diCarColor);
         driverInfo.setDiCarLicensePlate(diCarLicensePlate);
-        driverInfo.setDiDateJoined(diDateJoined);
-        driverInfo.setDiDateCarBought(diDateCarBought);
         driverInfo.setDiIsCarSecondHand(diIsCarSecondHand);
+        driverInfo.setDiDateJoinedTimestamp(diDateJoinedTimestamp);
+        driverInfo.setDiDateCarBoughtTimestamp(diDateCarBoughtTimestamp);
         driverInfo.setDiRating(diRating);
 
         return driverInfo;

@@ -1,5 +1,6 @@
 package com.m4l0n.hitchride.service.validations;
 
+import com.google.cloud.Timestamp;
 import com.m4l0n.hitchride.pojos.DriverInfo;
 import com.m4l0n.hitchride.pojos.User;
 
@@ -16,13 +17,13 @@ public class DriverInfoValidator {
     }
 
      private void validateDriverInfoCarAge(StringBuilder error, DriverInfo userDriverInfo) {
-        if (userDriverInfo.getDiDateCarBought().isAfter(LocalDate.now())) {
+        if (userDriverInfo.getDiDateCarBoughtTimestamp() > Timestamp.now().getSeconds()) {
             error.append("Car bought date cannot be in the future. ");
         }
-        if (userDriverInfo.getDiDateCarBought().isBefore(LocalDate.of(1900, 1, 1))) {
+        if (userDriverInfo.getDiDateCarBoughtTimestamp() < LocalDate.of(1900, 1, 1).toEpochDay()) {
             error.append("Car bought date cannot be before 1900. ");
         }
-        if (userDriverInfo.getDiDateCarBought().isAfter(LocalDate.now().minusYears(18))) {
+        if (userDriverInfo.getDiDateCarBoughtTimestamp() - userDriverInfo.getDiDateJoinedTimestamp() > 18 * 365 * 24 * 60 * 60) {
             error.append("Car age cannot be more than 18 years. ");
         }
      }
