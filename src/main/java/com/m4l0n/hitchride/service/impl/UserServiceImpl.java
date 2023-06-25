@@ -158,7 +158,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public User mapToUserObject(DocumentSnapshot data){
     private String uploadImageToStorage(MultipartFile imageFile) throws IOException {
         String fileName = UUID.randomUUID() + StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
         String storageFileName = "images/" + fileName;
@@ -171,6 +170,8 @@ public class UserServiceImpl implements UserService {
                 .create(blobInfo, imageFile.getBytes());
         return "https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media".formatted(firebaseStorageBucket.getName(), URLEncoder.encode(storageFileName, StandardCharsets.UTF_8));
     }
+
+    public User mapToUserObject(DocumentSnapshot data) {
         String userId = (String) data.get("userId");
         String userName = (String) data.get("userName");
         String userEmail = (String) data.get("userEmail");
