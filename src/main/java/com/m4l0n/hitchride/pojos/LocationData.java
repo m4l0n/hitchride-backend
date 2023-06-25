@@ -1,5 +1,6 @@
 package com.m4l0n.hitchride.pojos;
 
+import com.google.cloud.firestore.GeoPoint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,11 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Ride {
+public class LocationData {
 
-    private String rideId;
-    private User ridePassenger;
-    private LocationData rideLocationData;
-    private DriverJourney rideDriverJourney;
+    private GeoPoint origin;
+    private GeoPoint destination;
 
 }
