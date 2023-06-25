@@ -216,7 +216,8 @@ public class UserServiceImpl implements UserService {
         return "https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media".formatted(firebaseStorageBucket.getName(), URLEncoder.encode(storageFileName, StandardCharsets.UTF_8));
     }
 
-    public User mapToUserObject(DocumentSnapshot data) {
+
+    public User mapToUserObject(DocumentSnapshot data){
         String userId = (String) data.get("userId");
         String userName = (String) data.get("userName");
         String userEmail = (String) data.get("userEmail");
