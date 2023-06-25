@@ -68,8 +68,7 @@ public class RideServiceImpl implements RideService {
         return ride;
     }
 
-    @Override
-    public List<Ride> getRideHistory() throws ExecutionException, InterruptedException {
+    private List<Ride> getRideHistory() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         List<Ride> rides;
 
