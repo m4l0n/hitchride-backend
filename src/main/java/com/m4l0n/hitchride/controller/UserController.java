@@ -65,12 +65,13 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getSavedLocations")
-    public Response getUserSavedLocations() {
-        try {
-            Map<String, GeoPoint> userSavedLocations = userService.getUserSavedLocations();
 
-            return ResponseAPI.positiveResponse(userSavedLocations);
+    @PostMapping("/saveLocation")
+    public Response saveUserLocation(@RequestBody Map<String, GeoPoint> location) {
+        try {
+            userService.saveUserLocation(location);
+
+            return ResponseAPI.positiveResponse(location);
         } catch (Exception e) {
             throw new HitchrideException(e.getMessage());
         }
