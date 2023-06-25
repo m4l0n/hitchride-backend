@@ -233,8 +233,8 @@ public class UserServiceImpl implements UserService {
         String diCarModel = (String) data.get("diCarModel");
         String diCarColor = (String) data.get("diCarColor");
         String diCarLicensePlate = (String) data.get("diCarLicensePlate");
-        Long diDateJoinedTimestamp = ((Number) data.get("diDateJoined")).longValue();
-        Long diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBought")).longValue();
+        Long diDateJoinedTimestamp = ((Number) data.get("diDateJoinedTimestamp")).longValue();
+        Long diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBoughtTimestamp")).longValue();
         Boolean diIsCarSecondHand = (Boolean) data.get("diIsCarSecondHand");
         Integer diRating = ((Number) data.get("diRating")).intValue();
 
