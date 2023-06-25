@@ -107,6 +107,18 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    public User updateUserPoints(int points) throws ExecutionException, InterruptedException {
+        User findUser = loadUserByUsername(authenticationService.getAuthenticatedUsername());
+        if (findUser != null) {
+            ApiFuture<WriteResult> result = userRef.document(findUser.getUserId())
+                    .update("userPoints", FieldValue.increment(-points));
+            //Wait for the result to finish
+            result.get();
+            return findUser;
+        }
+        return null;
+    }
 
     @Override
     public User loadUserByUsername(String username) throws ExecutionException, InterruptedException {

@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @SecurityRequirement(name = "bearerAuth")
@@ -39,6 +40,20 @@ public class RewardController {
     public Response createReward(@RequestBody Reward reward, @RequestParam String rcId) {
         try {
             Reward newReward = rewardService.createReward(reward, rcId);
+
+            return ResponseAPI.positiveResponse(reward);
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @PostMapping("/redeem")
+    public Response redeemReward(@RequestBody Map<String, String> rewardId) {
+        try {
+            if (!rewardId.containsKey("rewardId")) {
+                throw new HitchrideException("Reward id is required");
+            }
+            Reward reward = rewardService.redeemReward(rewardId.get("rewardId"));
 
             return ResponseAPI.positiveResponse(reward);
         } catch (Exception e) {

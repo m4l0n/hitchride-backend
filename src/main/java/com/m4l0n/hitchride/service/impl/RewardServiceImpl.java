@@ -5,10 +5,12 @@ import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.pojos.Reward;
 import com.m4l0n.hitchride.pojos.RewardCategory;
 import com.m4l0n.hitchride.service.RewardService;
+import com.m4l0n.hitchride.service.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -16,9 +18,11 @@ import java.util.stream.Collectors;
 public class RewardServiceImpl implements RewardService {
 
     private final CollectionReference rewardsRef;
+    private final UserService userService;
 
-    public RewardServiceImpl(Firestore firestore) {
+    public RewardServiceImpl(Firestore firestore, UserService userService) {
         this.rewardsRef = firestore.collection("reward_category");
+        this.userService = userService;
     }
 
     @Override
@@ -27,7 +31,8 @@ public class RewardServiceImpl implements RewardService {
         QuerySnapshot document = querySnapshot.get();
 
         if (!document.isEmpty()) {
-            return document.getDocuments().stream()
+            return document.getDocuments()
+                    .stream()
                     .map(this::mapToRewardCategory)
                     .collect(Collectors.toList());
         } else {
@@ -44,6 +49,25 @@ public class RewardServiceImpl implements RewardService {
 
         return reward;
     }
+
+    @Override
+    public Reward redeemReward(String rewardId) throws ExecutionException, InterruptedException {
+        List<RewardCategory> rewardCategories = getRewardsCategories();
+        for (RewardCategory rewardCategory : rewardCategories) {
+            Optional<Reward> optionalReward = rewardCategory.getRcRewardsList()
+                    .stream()
+                    .filter(reward -> reward.getRewardId().equals(rewardId))
+                    .findFirst();
+
+            if (optionalReward.isPresent()) {
+                Reward reward = optionalReward.get();
+                userService.updateUserPoints(reward.getRewardPointsRequired());
+                return reward;
+            }
+        }
+        return null;  // Return null if rewardId is not found or an exception is thrown
+    }
+
     private RewardCategory mapToRewardCategory(DocumentSnapshot documentSnapshot) {
         RewardCategory rewardCategory = new RewardCategory();
         rewardCategory.setRcId(documentSnapshot.getId());

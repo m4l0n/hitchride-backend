@@ -12,4 +12,6 @@ public interface RewardService {
 
     Reward createReward(Reward reward, String rcId) throws ExecutionException, InterruptedException;
 
+    Reward redeemReward(String rewardId) throws ExecutionException, InterruptedException;
+
 }
