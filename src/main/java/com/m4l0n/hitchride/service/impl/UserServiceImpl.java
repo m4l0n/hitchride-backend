@@ -182,9 +182,7 @@ public class UserServiceImpl implements UserService {
 
             Map<String, GeoPoint> userSavedLocations = user.getUserSavedLocations();
             userSavedLocations.putAll(location);
-            user.setUserSavedLocations(userSavedLocations);
-            ApiFuture<WriteResult> result = userRef.document(user.getUserId())
-                    .set(user);
+            ApiFuture<WriteResult> result = userRef.document(user.getUserId()).update("userSavedLocations", userSavedLocations);
             //Wait for the result to finish
             result.get();
             return location;

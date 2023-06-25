@@ -2,6 +2,7 @@ package com.m4l0n.hitchride.service.validations;
 
 import com.google.cloud.firestore.GeoPoint;
 import com.m4l0n.hitchride.pojos.User;
+import com.m4l0n.hitchride.utility.UtilityMethods;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -38,10 +39,11 @@ public class UserValidator {
     private void validateSaveLocationExists(StringBuilder errors, User currentUser, Map<String, GeoPoint> newSaveLocation) {
         Set<String> currentUserSavedLocations = currentUser.getUserSavedLocations()
                 .keySet();
-        Set<String> userNewSaveLocation = newSaveLocation.keySet();
-        currentUserSavedLocations.retainAll(userNewSaveLocation);
+        Set<String> userNewSaveLocation = UtilityMethods.deepCopyMap(newSaveLocation)
+                .keySet();
+        userNewSaveLocation.retainAll(currentUserSavedLocations);
 
-        if (!currentUserSavedLocations.isEmpty())
+        if (!userNewSaveLocation.isEmpty())
             errors.append("Save location already exists.");
     }
 }
