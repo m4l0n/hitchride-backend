@@ -27,16 +27,16 @@ public class ReviewValidator {
             ApiFuture<QuerySnapshot> documentSnapshot = reviewRef.whereEqualTo("reviewRide.rideId", reviewRideId).get();
             QuerySnapshot document = documentSnapshot.get();
             if (!document.isEmpty()) {
-                errors.append("Review has already exist for this ride.");
+                errors.append("Review has already exist for this ride. ");
             }
         } catch (Exception e) {
-            errors.append("Something went wrong while validating review.");
+            errors.append("Something went wrong while validating review. ");
         }
     }
 
     private void validateReviewFromPassenger(StringBuilder errors, String reviewPassengerId, String loggedInUserId) {
         if (!reviewPassengerId.equals(loggedInUserId)) {
-            errors.append("You can only review rides you have been a passenger on.");
+            errors.append("You can only review rides you have been a passenger on. ");
         }
     }
 
