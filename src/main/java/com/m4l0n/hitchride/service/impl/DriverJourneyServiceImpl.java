@@ -58,7 +58,10 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     public DriverJourney acceptDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException {
-        return deleteDriverJourney(driverJourney);
+        if (executeDeleteDriverJourney(driverJourney.getDjId())) {
+            return driverJourney;
+        }
+        return null;
     }
 
     @Override
@@ -95,18 +98,28 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     public DriverJourney deleteDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException {
-        ApiFuture<WriteResult> writeResultApiFuture = driverJourneyRef.document(driverJourney.getDjId())
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
+        }
+
+        if (executeDeleteDriverJourney(driverJourney.getDjId())) {
+            return driverJourney;
+        }
+        return null;
+    }
+
+    private Boolean executeDeleteDriverJourney(String djId) throws ExecutionException, InterruptedException {
+        ApiFuture<WriteResult> writeResultApiFuture = driverJourneyRef.document(djId)
                 .delete();
         writeResultApiFuture.get();
 
-        DocumentSnapshot documentSnapshot = driverJourneyRef.document(driverJourney.getDjId())
+        DocumentSnapshot documentSnapshot = driverJourneyRef.document(djId)
                 .get()
                 .get();
 
-        if (documentSnapshot.exists()) {
-            return null;
-        }
-        return driverJourney;
+        return !documentSnapshot.exists();
     }
 
     @Override
