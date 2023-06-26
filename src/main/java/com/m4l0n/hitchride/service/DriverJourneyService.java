@@ -14,4 +14,8 @@ public interface DriverJourneyService {
     DriverJourney acceptDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException;
 
     CompletableFuture<List<DriverJourney>> searchRidesFromDriverJourneys(SearchRideCriteria searchRideCriteria) throws Exception;
+
+    DriverJourney deleteDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException;
+
+    List<DriverJourney> getUserDriverJourneys() throws ExecutionException, InterruptedException;
 }
