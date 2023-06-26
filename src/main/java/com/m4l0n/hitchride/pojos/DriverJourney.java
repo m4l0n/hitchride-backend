@@ -14,5 +14,6 @@ public class DriverJourney {
     private Long djTimestamp;
     private LocationData djLocationData;
     private Integer djDestinationRange;
+    private String djPrice;
 
 }

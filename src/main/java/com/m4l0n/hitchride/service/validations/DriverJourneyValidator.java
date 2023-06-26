@@ -10,6 +10,7 @@ public class DriverJourneyValidator {
         this.validateDriverJourneyLocation(errors, driverJourney.getDjLocationData()
                 .getOrigin(), driverJourney.getDjLocationData()
                 .getDestination());
+        this.validateDriverJourneyPrice(errors, driverJourney.getDjPrice());
 
         return errors.toString();
     }
@@ -29,6 +30,14 @@ public class DriverJourneyValidator {
     private void validateDriverJourneyDriver(StringBuilder errors, String djDriverId, String currentLoggedInUser) {
         if (!djDriverId.equals(currentLoggedInUser))
             errors.append("Driver must be the current logged in user. ");
+    }
+
+    private void validateDriverJourneyPrice(StringBuilder errors, String djPrice) {
+        if (djPrice.isEmpty())
+            errors.append("Price cannot be empty. ");
+        //regex check if string is valid number
+        if (!djPrice.matches("\\d+(\\.\\d+)?"))
+            errors.append("Price must be a valid number. ");
     }
 
 }
