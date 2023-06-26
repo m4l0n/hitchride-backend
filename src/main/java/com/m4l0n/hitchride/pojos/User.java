@@ -12,13 +12,13 @@ import java.util.Map;
 @NoArgsConstructor
 public class User {
 
-    public String userId;
-    public String userName;
-    public String userEmail;
-    public String userPhoneNumber;
-    public String userPhotoUrl;
-    public Integer userPoints;
-    public Map<String, GeoPoint> userSavedLocations;
-    public DriverInfo userDriverInfo;
+    private String userId;
+    private String userName;
+    private String userEmail;
+    private String userPhoneNumber;
+    private String userPhotoUrl;
+    private Integer userPoints;
+    private Map<String, GeoPoint> userSavedLocations;
+    private DriverInfo userDriverInfo;
 
 }

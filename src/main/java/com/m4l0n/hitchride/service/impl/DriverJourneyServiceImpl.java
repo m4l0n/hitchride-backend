@@ -12,6 +12,7 @@ import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.service.DriverJourneyService;
+import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.DriverJourneyValidator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,12 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     private final CollectionReference driverJourneyRef;
     private final DriverJourneyValidator driverJourneyValidator;
-
+    private final AuthenticationService authenticationService;
     private final GeoApiContext geoApiContext;
 
-    public DriverJourneyServiceImpl(Firestore firestore, GeoApiContext geoApiContext) {
+    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, GeoApiContext geoApiContext) {
         this.driverJourneyRef = firestore.collection("driver_journey");
+        this.authenticationService = authenticationService;
         this.geoApiContext = geoApiContext;
         driverJourneyValidator = new DriverJourneyValidator();
     }
@@ -56,18 +58,10 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     public DriverJourney acceptDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException {
-        ApiFuture<WriteResult> writeResultApiFuture = driverJourneyRef.document(driverJourney.getDjId())
-                .delete();
-        writeResultApiFuture.get();
-
-        DocumentSnapshot documentSnapshot = driverJourneyRef.document(driverJourney.getDjId())
-                .get()
-                .get();
-
-        if (documentSnapshot.exists()) {
-            return null;
+        if (executeDeleteDriverJourney(driverJourney.getDjId())) {
+            return driverJourney;
         }
-        return driverJourney;
+        return null;
     }
 
     @Override
@@ -100,6 +94,44 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
         }
 
         return result;
+    }
+
+    @Override
+    public DriverJourney deleteDriverJourney(DriverJourney driverJourney) throws ExecutionException, InterruptedException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
+        }
+
+        if (executeDeleteDriverJourney(driverJourney.getDjId())) {
+            return driverJourney;
+        }
+        return null;
+    }
+
+    private Boolean executeDeleteDriverJourney(String djId) throws ExecutionException, InterruptedException {
+        ApiFuture<WriteResult> writeResultApiFuture = driverJourneyRef.document(djId)
+                .delete();
+        writeResultApiFuture.get();
+
+        DocumentSnapshot documentSnapshot = driverJourneyRef.document(djId)
+                .get()
+                .get();
+
+        return !documentSnapshot.exists();
+    }
+
+    @Override
+    public List<DriverJourney> getUserDriverJourneys() throws ExecutionException, InterruptedException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        QuerySnapshot queryDocumentSnapshots = driverJourneyRef.whereEqualTo("djDriver.userId", currentLoggedInUser)
+                .get()
+                .get();
+        if (queryDocumentSnapshots.isEmpty()) {
+            return List.of();
+        }
+        return queryDocumentSnapshots.toObjects(DriverJourney.class);
     }
 
     private List<DriverJourney> getDriverJourneysWithTimestamp(Long timestamp) throws ExecutionException, InterruptedException {

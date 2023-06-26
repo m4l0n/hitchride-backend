@@ -16,13 +16,13 @@ public class RideValidator {
 
     private void validateRideParties(StringBuilder errors, User passenger, User driver) {
         if (passenger.equals(driver)) {
-            errors.append("Passenger and driver cannot be the same person");
+            errors.append("Passenger and driver cannot be the same person.  ");
         }
     }
 
     private void validatePassenger(StringBuilder errors, User currentLoggedInUser, User passenger) {
         if (!currentLoggedInUser.equals(passenger)) {
-            errors.append("Passenger must be the current logged in user");
+            errors.append("Passenger must be the current logged in user. ");
         }
     }
 }

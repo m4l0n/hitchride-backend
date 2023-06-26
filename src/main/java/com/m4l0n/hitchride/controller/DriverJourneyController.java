@@ -9,10 +9,7 @@ import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.DriverJourneyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -45,6 +42,30 @@ public class DriverJourneyController {
         try {
             CompletableFuture<List<DriverJourney>> futureJourneys = driverJourneyService.searchRidesFromDriverJourneys(searchRideCriteria);
             List<DriverJourney> driverJourneys = futureJourneys.get();
+
+            return ResponseAPI.positiveResponse(driverJourneys);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @PostMapping("/deleteDriverJourney")
+    public Response deleteDriverJourney(@RequestBody DriverJourney driverJourney) {
+        try {
+            DriverJourney deletedDriverJourney = driverJourneyService.deleteDriverJourney(driverJourney);
+
+            return ResponseAPI.positiveResponse(deletedDriverJourney);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getUserDriverJourneys")
+    public Response getUserDriverJourneys() {
+        try {
+            List<DriverJourney> driverJourneys = driverJourneyService.getUserDriverJourneys();
 
             return ResponseAPI.positiveResponse(driverJourneys);
         } catch (Exception e) {

@@ -28,12 +28,12 @@ public class UserValidator {
 
     private void validateImageFileSize(StringBuilder errors, MultipartFile imageFile) {
         if (imageFile.getSize() > 1000000)
-            errors.append("File size is too large.");
+            errors.append("File size is too large. ");
     }
 
     private void validateImageFileExtension(StringBuilder errors, MultipartFile imageFile) {
         if (!Objects.equals(imageFile.getContentType(), "image/jpeg") && !Objects.equals(imageFile.getContentType(), "image/png"))
-            errors.append("File extension is not supported.");
+            errors.append("File extension is not supported. ");
     }
 
     private void validateSaveLocationExists(StringBuilder errors, User currentUser, Map<String, GeoPoint> newSaveLocation) {
@@ -44,6 +44,6 @@ public class UserValidator {
         userNewSaveLocation.retainAll(currentUserSavedLocations);
 
         if (!userNewSaveLocation.isEmpty())
-            errors.append("Save location already exists.");
+            errors.append("Save location already exists. ");
     }
 }
