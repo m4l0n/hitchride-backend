@@ -21,3 +21,7 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+google:
+  maps:
+    apiKey: AIzaSyDYP96lRLzzow_gpW-IhI6pg3A6dKE-XCU
