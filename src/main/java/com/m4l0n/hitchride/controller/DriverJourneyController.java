@@ -1,8 +1,8 @@
 package com.m4l0n.hitchride.controller;
 
 
+import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
@@ -26,9 +26,9 @@ public class DriverJourneyController {
     }
 
     @PostMapping("/createDriverJourney")
-    public Response postNewDriverJourney(@RequestBody DriverJourney driverJourney) {
+    public Response postNewDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
-            DriverJourney newDriverJourney = driverJourneyService.createDriverJourney(driverJourney);
+            DriverJourneyDTO newDriverJourney = driverJourneyService.createDriverJourney(driverJourneyDTO);
 
             return ResponseAPI.positiveResponse(newDriverJourney);
         } catch (Exception e) {
@@ -40,8 +40,8 @@ public class DriverJourneyController {
     @PostMapping("/searchRides")
     public Response searchRides(@RequestBody SearchRideCriteria searchRideCriteria) {
         try {
-            CompletableFuture<List<DriverJourney>> futureJourneys = driverJourneyService.searchRidesFromDriverJourneys(searchRideCriteria);
-            List<DriverJourney> driverJourneys = futureJourneys.get();
+            CompletableFuture<List<DriverJourneyDTO>> futureJourneys = driverJourneyService.searchRidesFromDriverJourneys(searchRideCriteria);
+            List<DriverJourneyDTO> driverJourneys = futureJourneys.get();
 
             return ResponseAPI.positiveResponse(driverJourneys);
         } catch (Exception e) {
@@ -51,9 +51,9 @@ public class DriverJourneyController {
     }
 
     @PostMapping("/deleteDriverJourney")
-    public Response deleteDriverJourney(@RequestBody DriverJourney driverJourney) {
+    public Response deleteDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
-            DriverJourney deletedDriverJourney = driverJourneyService.deleteDriverJourney(driverJourney);
+            DriverJourneyDTO deletedDriverJourney = driverJourneyService.deleteDriverJourney(driverJourneyDTO);
 
             return ResponseAPI.positiveResponse(deletedDriverJourney);
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class DriverJourneyController {
     @GetMapping("/getUserDriverJourneys")
     public Response getUserDriverJourneys() {
         try {
-            List<DriverJourney> driverJourneys = driverJourneyService.getUserDriverJourneys();
+            List<DriverJourneyDTO> driverJourneys = driverJourneyService.getUserDriverJourneys();
 
             return ResponseAPI.positiveResponse(driverJourneys);
         } catch (Exception e) {

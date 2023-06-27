@@ -26,6 +26,14 @@ public class UserValidator {
         return errors.toString();
     }
 
+    public String validateUpdateProfile(User user, String currentLoggedInUser) {
+        StringBuilder errors = new StringBuilder();
+
+        this.validateUpdateUser(errors, user.getUserName(), currentLoggedInUser);
+
+        return errors.toString();
+    }
+
     private void validateImageFileSize(StringBuilder errors, MultipartFile imageFile) {
         if (imageFile.getSize() > 1000000)
             errors.append("File size is too large. ");
@@ -45,5 +53,10 @@ public class UserValidator {
 
         if (!userNewSaveLocation.isEmpty())
             errors.append("Save location already exists. ");
+    }
+
+    private void validateUpdateUser(StringBuilder errors, String username, String currentLoggedInUser) {
+        if (!Objects.equals(username, currentLoggedInUser))
+            errors.append("Usernames do not match. ");
     }
 }

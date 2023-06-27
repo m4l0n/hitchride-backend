@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class SearchRideCriteria {
 
-    private LocationData searchRideLocationCriteria;
+    private OriginDestination searchRideLocationCriteria;
     private Long searchRideTimestampCriteria;
 
 }

@@ -11,7 +11,7 @@ public class Ride {
 
     private String rideId;
     private User ridePassenger;
-    private LocationData rideLocationData;
+    private OriginDestination rideOriginDestination;
     private DriverJourney rideDriverJourney;
 
 }
