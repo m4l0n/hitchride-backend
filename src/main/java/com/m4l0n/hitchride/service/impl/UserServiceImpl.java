@@ -149,54 +149,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public Map<String, GeoPoint> getUserSavedLocations() throws ExecutionException, InterruptedException {
-        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-
-        User user = loadUserByUsername(currentLoggedInUser);
-
-        if (user != null) {
-            log.info("getUserSavedLocations: {}", Optional.ofNullable(user.getUserSavedLocations()));
-            return user.getUserSavedLocations();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public Map<String, GeoPoint> saveUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException {
-        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-
-        User user = loadUserByUsername(currentLoggedInUser);
-
-        if (user != null) {
-
-            String errors = userValidator.validateSaveUserLocation(user, location);
-            if (!errors.isEmpty()) {
-                throw new HitchrideException(errors);
-            }
-
-            Map<String, GeoPoint> userSavedLocations = user.getUserSavedLocations();
-            userSavedLocations.putAll(location);
-            ApiFuture<WriteResult> result = userRef.document(user.getUserId()).update("userSavedLocations", userSavedLocations);
-            //Wait for the result to finish
-            result.get();
-            return location;
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public Map<String, GeoPoint> deleteUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException {
-        return null;
-    }
-
-    @Override
-    public Map<String, GeoPoint> updateUserLocation(Map<String, GeoPoint> location) throws ExecutionException, InterruptedException {
-        return null;
-    }
-
     private String uploadImageToStorage(MultipartFile imageFile) throws IOException {
         String fileName = UUID.randomUUID() + StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
         String storageFileName = "images/" + fileName;
