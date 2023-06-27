@@ -1,11 +1,11 @@
 package com.m4l0n.hitchride.dto;
 
-import com.m4l0n.hitchride.pojos.DriverJourney;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 
 public record RideDTO(
         String rideId,
-        UserDTO ridePassenger,
+        HitchRideUser ridePassenger,
         OriginDestinationDTO rideOriginDestination,
-        DriverJourney rideDriverJourney
+        DriverJourneyDTO rideDriverJourney
 ) {
 }
