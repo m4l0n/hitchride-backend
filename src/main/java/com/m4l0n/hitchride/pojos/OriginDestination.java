@@ -8,10 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LocationData {
+public class OriginDestination {
 
-    private String addressName;
-    private String addressString;
-    private GeoPoint addressCoordinates;
+    private GeoPoint origin;
+    private GeoPoint destination;
 
 }

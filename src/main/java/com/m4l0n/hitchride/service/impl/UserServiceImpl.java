@@ -10,7 +10,9 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.gson.Gson;
+import com.m4l0n.hitchride.dto.UserDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
+import com.m4l0n.hitchride.mapping.UserMapper;
 import com.m4l0n.hitchride.pojos.DriverInfo;
 import com.m4l0n.hitchride.pojos.User;
 import com.m4l0n.hitchride.service.UserService;
@@ -39,12 +41,14 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationService authenticationService;
     private final Gson gson;
     private final ObjectMapper objectMapper;
+    private final UserMapper userMapper;
 
 
-    public UserServiceImpl(Firestore firestore, Bucket firebaseStorageBucket, AuthenticationService authenticationService) {
+    public UserServiceImpl(Firestore firestore, Bucket firebaseStorageBucket, AuthenticationService authenticationService, UserMapper userMapper) {
         this.userRef = firestore.collection("users");
         this.firebaseStorageBucket = firebaseStorageBucket;
         this.authenticationService = authenticationService;
+        this.userMapper = userMapper;
         userValidator = new UserValidator();
         gson = new Gson();
         objectMapper = new ObjectMapper();
@@ -52,17 +56,21 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public User getProfile() throws ExecutionException, InterruptedException {
+    public UserDTO getProfile() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         User user = loadUserByUsername(currentLoggedInUser);
 
         log.info("getProfile: {}", user != null ? user.getUserId() : null);
 
-        return user;
+        if (user != null) {
+            return userMapper.mapPojoToDto(user);
+        }
+        return null;
     }
 
     @Override
-    public User createUser(User user) throws ExecutionException, InterruptedException {
+    public UserDTO createUser(UserDTO userDTO) throws ExecutionException, InterruptedException {
+        User user = userMapper.mapDtoToPojo(userDTO);
         //If user does not have an ID, set the ID to the Firebase Authentication ID
         if (user.getUserId() == null) {
             user.setUserId(authenticationService.getAuthenticatedUsername());
@@ -77,14 +85,20 @@ public class UserServiceImpl implements UserService {
                     .set(user);
             //Wait for the result to finish
             result.get();
-            return user;
+            return userDTO;
         }
         return null;
     }
 
     @Override
-    public User updateUser(User user) throws ExecutionException, InterruptedException, JsonProcessingException {
-        User findUser = loadUserByUsername(authenticationService.getAuthenticatedUsername());
+    public UserDTO updateUser(UserDTO userDTO) throws ExecutionException, InterruptedException, JsonProcessingException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        User user = userMapper.mapDtoToPojo(userDTO);
+        String errors = userValidator.validateUpdateProfile(user, currentLoggedInUser);
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
+        }
+        User findUser = loadUserByUsername(currentLoggedInUser);
         if (findUser != null) {
             //Filter null values from user object and convert it to a map
             final Map<String, Object> userMap = objectMapper.readValue(gson.toJson(user),
@@ -94,7 +108,7 @@ public class UserServiceImpl implements UserService {
                     .update(userMap);
             //Wait for the result to finish
             result.get();
-            return user;
+            return userDTO;
         }
         return null;
     }

@@ -12,7 +12,7 @@ public class DriverJourney {
     private String djId;
     private User djDriver;
     private Long djTimestamp;
-    private LocationData djLocationData;
+    private OriginDestination djOriginDestination;
     private Integer djDestinationRange;
     private String djPrice;
 

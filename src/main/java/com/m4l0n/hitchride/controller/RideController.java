@@ -1,7 +1,7 @@
 package com.m4l0n.hitchride.controller;
 
+import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.pojos.Ride;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.RideService;
@@ -25,7 +25,7 @@ public class RideController {
     @GetMapping("/getRecentRides")
     public Response getRecentRides() {
         try {
-            List<Ride> rides = rideService.getRecentRides();
+            List<RideDTO> rides = rideService.getRecentRides();
 
             return ResponseAPI.positiveResponse(rides);
         } catch (Exception e) {
@@ -34,9 +34,9 @@ public class RideController {
     }
 
     @PostMapping("/acceptRide")
-    public Response acceptRide(@RequestBody Ride ride) {
+    public Response acceptRide(@RequestBody RideDTO rideDTO) {
         try {
-            Ride newRide = rideService.acceptRide(ride);
+            RideDTO newRide = rideService.acceptRide(rideDTO);
 
             if (newRide == null) {
                 throw new HitchrideException("Ride not accepted");
@@ -52,7 +52,7 @@ public class RideController {
     @GetMapping("/getRecentDrives")
     public Response getRecentDrives() {
         try {
-            List<Ride> rides = rideService.getRecentDrives();
+            List<RideDTO> rides = rideService.getRecentDrives();
 
             return ResponseAPI.positiveResponse(rides);
         } catch (Exception e) {
