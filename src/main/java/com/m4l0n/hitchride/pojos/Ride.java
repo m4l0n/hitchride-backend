@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class Ride {
 
     private String rideId;
-    private User ridePassenger;
+    private HitchRideUser ridePassenger;
     private OriginDestination rideOriginDestination;
     private DriverJourney rideDriverJourney;
 

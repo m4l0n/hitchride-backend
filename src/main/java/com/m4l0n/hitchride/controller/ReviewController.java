@@ -1,5 +1,6 @@
 package com.m4l0n.hitchride.controller;
 
+import com.m4l0n.hitchride.dto.ReviewDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.Review;
 import com.m4l0n.hitchride.response.Response;
@@ -25,7 +26,7 @@ public class ReviewController {
     @GetMapping("/getUserReviews")
     public Response getUserReviews() {
         try {
-            List<Review> reviewList = reviewService.getUserReviews();
+            List<ReviewDTO> reviewList = reviewService.getUserReviews();
 
             return ResponseAPI.positiveResponse(reviewList);
         } catch (Exception e) {
@@ -35,7 +36,7 @@ public class ReviewController {
     }
 
     @PostMapping("/createReview")
-    public Response createReview(@RequestBody Review review) {
+    public Response createReview(@RequestBody ReviewDTO review) {
         try {
             reviewService.createReview(review);
 

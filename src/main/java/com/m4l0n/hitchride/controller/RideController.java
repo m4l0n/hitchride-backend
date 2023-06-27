@@ -29,6 +29,7 @@ public class RideController {
 
             return ResponseAPI.positiveResponse(rides);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HitchrideException(e.getMessage());
         }
     }

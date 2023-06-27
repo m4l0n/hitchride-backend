@@ -3,8 +3,10 @@ package com.m4l0n.hitchride.service.impl;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
+import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.DriverJourneyMapper;
+import com.m4l0n.hitchride.mapping.SearchRideCriteriaMapper;
 import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.service.DriverJourneyService;
@@ -29,13 +31,15 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     private final AuthenticationService authenticationService;
     private final GoogleMapsApiClient googleMapsApiClient;
     private final DriverJourneyMapper driverJourneyMapper;
+    private final SearchRideCriteriaMapper searchRideCriteriaMapper;
 
 
-    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, GoogleMapsApiClient googleMapsApiClient, DriverJourneyMapper driverJourneyMapper) {
+    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, GoogleMapsApiClient googleMapsApiClient, DriverJourneyMapper driverJourneyMapper, SearchRideCriteriaMapper searchRideCriteriaMapper) {
         this.driverJourneyRef = firestore.collection("driver_journey");
         this.authenticationService = authenticationService;
         this.googleMapsApiClient = googleMapsApiClient;
         this.driverJourneyMapper = driverJourneyMapper;
+        this.searchRideCriteriaMapper = searchRideCriteriaMapper;
         driverJourneyValidator = new DriverJourneyValidator();
     }
 
@@ -66,7 +70,8 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     @Async
-    public CompletableFuture<List<DriverJourneyDTO>> searchRidesFromDriverJourneys(SearchRideCriteria searchRideCriteria) throws Exception {
+    public CompletableFuture<List<DriverJourneyDTO>> searchRidesFromDriverJourneys(SearchRideCriteriaDTO searchRideCriteriaDTO) throws Exception {
+        SearchRideCriteria searchRideCriteria = searchRideCriteriaMapper.mapDtoToPojo(searchRideCriteriaDTO);
         CompletableFuture<List<DriverJourneyDTO>> result = new CompletableFuture<>();
         List<DriverJourney> driverJourneys = getDriverJourneysWithTimestamp(searchRideCriteria.getSearchRideTimestampCriteria());
         if (driverJourneys.isEmpty()) {

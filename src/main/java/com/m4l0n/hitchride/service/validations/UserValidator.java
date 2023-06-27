@@ -1,13 +1,9 @@
 package com.m4l0n.hitchride.service.validations;
 
-import com.google.cloud.firestore.GeoPoint;
-import com.m4l0n.hitchride.pojos.User;
-import com.m4l0n.hitchride.utility.UtilityMethods;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class UserValidator {
 
@@ -19,17 +15,19 @@ public class UserValidator {
         return errors.toString();
     }
 
-    public String validateSaveUserLocation(User currentUser, Map<String, GeoPoint> newSaveLocation) {
+    public String validateUpdateProfile(HitchRideUser user, String currentLoggedInUser) {
         StringBuilder errors = new StringBuilder();
-        this.validateSaveLocationExists(errors, currentUser, newSaveLocation);
+
+        this.validateUserID(errors, user.getUserId());
+        this.validateValidUser(errors, user.getUserId(), currentLoggedInUser);
 
         return errors.toString();
     }
 
-    public String validateUpdateProfile(User user, String currentLoggedInUser) {
+    public String validateCreateProfile(HitchRideUser user) {
         StringBuilder errors = new StringBuilder();
 
-        this.validateUpdateUser(errors, user.getUserName(), currentLoggedInUser);
+        this.validateUserID(errors, user.getUserId());
 
         return errors.toString();
     }
@@ -44,19 +42,14 @@ public class UserValidator {
             errors.append("File extension is not supported. ");
     }
 
-    private void validateSaveLocationExists(StringBuilder errors, User currentUser, Map<String, GeoPoint> newSaveLocation) {
-        Set<String> currentUserSavedLocations = currentUser.getUserSavedLocations()
-                .keySet();
-        Set<String> userNewSaveLocation = UtilityMethods.deepCopyMap(newSaveLocation)
-                .keySet();
-        userNewSaveLocation.retainAll(currentUserSavedLocations);
-
-        if (!userNewSaveLocation.isEmpty())
-            errors.append("Save location already exists. ");
-    }
-
-    private void validateUpdateUser(StringBuilder errors, String username, String currentLoggedInUser) {
+    private void validateValidUser(StringBuilder errors, String username, String currentLoggedInUser) {
         if (!Objects.equals(username, currentLoggedInUser))
             errors.append("Usernames do not match. ");
     }
+
+    private void validateUserID(StringBuilder errors, String userID) {
+        if (userID == null || userID.isEmpty())
+            errors.append("User ID is empty. ");
+    }
+
 }

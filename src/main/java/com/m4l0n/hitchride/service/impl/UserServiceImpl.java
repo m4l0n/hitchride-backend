@@ -10,11 +10,9 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.gson.Gson;
-import com.m4l0n.hitchride.dto.UserDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.mapping.UserMapper;
 import com.m4l0n.hitchride.pojos.DriverInfo;
-import com.m4l0n.hitchride.pojos.User;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.UserValidator;
@@ -27,7 +25,6 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -41,14 +38,12 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationService authenticationService;
     private final Gson gson;
     private final ObjectMapper objectMapper;
-    private final UserMapper userMapper;
 
 
-    public UserServiceImpl(Firestore firestore, Bucket firebaseStorageBucket, AuthenticationService authenticationService, UserMapper userMapper) {
+    public UserServiceImpl(Firestore firestore, Bucket firebaseStorageBucket, AuthenticationService authenticationService) {
         this.userRef = firestore.collection("users");
         this.firebaseStorageBucket = firebaseStorageBucket;
         this.authenticationService = authenticationService;
-        this.userMapper = userMapper;
         userValidator = new UserValidator();
         gson = new Gson();
         objectMapper = new ObjectMapper();
@@ -56,27 +51,23 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserDTO getProfile() throws ExecutionException, InterruptedException {
+    public HitchRideUser getProfile() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-        User user = loadUserByUsername(currentLoggedInUser);
+        HitchRideUser user = loadUserByUsername(currentLoggedInUser);
 
         log.info("getProfile: {}", user != null ? user.getUserId() : null);
 
-        if (user != null) {
-            return userMapper.mapPojoToDto(user);
-        }
-        return null;
+        return user;
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) throws ExecutionException, InterruptedException {
-        User user = userMapper.mapDtoToPojo(userDTO);
-        //If user does not have an ID, set the ID to the Firebase Authentication ID
-        if (user.getUserId() == null) {
-            user.setUserId(authenticationService.getAuthenticatedUsername());
+    public HitchRideUser createUser(HitchRideUser user) throws ExecutionException, InterruptedException {
+        String errors = userValidator.validateCreateProfile(user);
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
         }
         //Checks first if the user exists
-        User findUser = loadUserByUsername(user.getUserId());
+        HitchRideUser findUser = loadUserByUsername(user.getUserId());
         if (findUser == null) {
             DriverInfo userDriverInfo = user.getUserDriverInfo();
             userDriverInfo.setDiDateJoinedTimestamp(Timestamp.now()
@@ -85,20 +76,20 @@ public class UserServiceImpl implements UserService {
                     .set(user);
             //Wait for the result to finish
             result.get();
-            return userDTO;
+            return user;
         }
         return null;
     }
 
     @Override
-    public UserDTO updateUser(UserDTO userDTO) throws ExecutionException, InterruptedException, JsonProcessingException {
+    public HitchRideUser updateUser(HitchRideUser user) throws ExecutionException, InterruptedException, JsonProcessingException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-        User user = userMapper.mapDtoToPojo(userDTO);
+
         String errors = userValidator.validateUpdateProfile(user, currentLoggedInUser);
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
-        User findUser = loadUserByUsername(currentLoggedInUser);
+        HitchRideUser findUser = loadUserByUsername(currentLoggedInUser);
         if (findUser != null) {
             //Filter null values from user object and convert it to a map
             final Map<String, Object> userMap = objectMapper.readValue(gson.toJson(user),
@@ -108,14 +99,14 @@ public class UserServiceImpl implements UserService {
                     .update(userMap);
             //Wait for the result to finish
             result.get();
-            return userDTO;
+            return user;
         }
         return null;
     }
 
     @Override
-    public User updateUserPoints(int points) throws ExecutionException, InterruptedException {
-        User findUser = loadUserByUsername(authenticationService.getAuthenticatedUsername());
+    public HitchRideUser updateUserPoints(int points) throws ExecutionException, InterruptedException {
+        HitchRideUser findUser = loadUserByUsername(authenticationService.getAuthenticatedUsername());
         if (findUser != null) {
             ApiFuture<WriteResult> result = userRef.document(findUser.getUserId())
                     .update("userPoints", FieldValue.increment(-points));
@@ -137,20 +128,20 @@ public class UserServiceImpl implements UserService {
         //Update user profile picture in Firestore
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         ApiFuture<WriteResult> result = userRef.document(currentLoggedInUser)
-                .update("userProfilePicture", imageUrl);
+                .update("userPhotoUrl", imageUrl);
         //Wait for the result to finish
         result.get();
         return imageUrl;
     }
 
     @Override
-    public User loadUserByUsername(String username) throws ExecutionException, InterruptedException {
+    public HitchRideUser loadUserByUsername(String username) throws ExecutionException, InterruptedException {
         ApiFuture<DocumentSnapshot> documentSnapshot = userRef.document(username)
                 .get();
         DocumentSnapshot document = documentSnapshot.get();
 
         if (document.exists()) {
-            User user = mapToUserObject(document);
+            HitchRideUser user = mapToUserObject(document);
             log.info("loadUserByUsername: {}", user != null ? user.getUserId() : null);
             return user;
         } else {
@@ -220,23 +211,21 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public User mapToUserObject(DocumentSnapshot data){
+    public HitchRideUser mapToUserObject(DocumentSnapshot data) {
         String userId = (String) data.get("userId");
         String userName = (String) data.get("userName");
         String userEmail = (String) data.get("userEmail");
         String userPhoneNumber = (String) data.get("userPhoneNumber");
         String userPhotoUrl = (String) data.get("userPhotoUrl");
         Integer userPoints = ((Number) data.get("userPoints")).intValue();
-        Map<String, GeoPoint> userSavedLocations = (Map<String, GeoPoint>) data.get("userSavedLocations");
         DriverInfo driverInfo = mapToDriverInfoObject((Map<String, Object>) data.get("userDriverInfo"));
-        User user = new User();
+        HitchRideUser user = new HitchRideUser();
         user.setUserId(userId);
         user.setUserName(userName);
         user.setUserEmail(userEmail);
         user.setUserPhoneNumber(userPhoneNumber);
         user.setUserPhotoUrl(userPhotoUrl);
         user.setUserPoints(userPoints);
-        user.setUserSavedLocations(userSavedLocations);
         user.setUserDriverInfo(driverInfo);
 
         return user;

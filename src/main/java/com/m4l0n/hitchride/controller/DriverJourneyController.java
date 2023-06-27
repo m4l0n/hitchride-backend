@@ -2,6 +2,7 @@ package com.m4l0n.hitchride.controller;
 
 
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
+import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.response.Response;
@@ -25,7 +26,7 @@ public class DriverJourneyController {
         this.driverJourneyService = driverJourneyService;
     }
 
-    @PostMapping("/createDriverJourney")
+    @PostMapping("/create")
     public Response postNewDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
             DriverJourneyDTO newDriverJourney = driverJourneyService.createDriverJourney(driverJourneyDTO);
@@ -38,7 +39,7 @@ public class DriverJourneyController {
     }
 
     @PostMapping("/searchRides")
-    public Response searchRides(@RequestBody SearchRideCriteria searchRideCriteria) {
+    public Response searchRides(@RequestBody SearchRideCriteriaDTO searchRideCriteria) {
         try {
             CompletableFuture<List<DriverJourneyDTO>> futureJourneys = driverJourneyService.searchRidesFromDriverJourneys(searchRideCriteria);
             List<DriverJourneyDTO> driverJourneys = futureJourneys.get();
@@ -50,7 +51,7 @@ public class DriverJourneyController {
         }
     }
 
-    @PostMapping("/deleteDriverJourney")
+    @PostMapping("/delete")
     public Response deleteDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
             DriverJourneyDTO deletedDriverJourney = driverJourneyService.deleteDriverJourney(driverJourneyDTO);
@@ -62,7 +63,7 @@ public class DriverJourneyController {
         }
     }
 
-    @GetMapping("/getUserDriverJourneys")
+    @GetMapping("/getUserDj")
     public Response getUserDriverJourneys() {
         try {
             List<DriverJourneyDTO> driverJourneys = driverJourneyService.getUserDriverJourneys();

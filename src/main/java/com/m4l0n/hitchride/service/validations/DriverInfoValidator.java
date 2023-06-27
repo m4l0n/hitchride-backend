@@ -2,13 +2,13 @@ package com.m4l0n.hitchride.service.validations;
 
 import com.google.cloud.Timestamp;
 import com.m4l0n.hitchride.pojos.DriverInfo;
-import com.m4l0n.hitchride.pojos.User;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 
 import java.time.LocalDate;
 
 public class DriverInfoValidator {
 
-    public String validateDriverInfoCreation(User driverUser) {
+    public String validateDriverInfoCreation(HitchRideUser driverUser) {
         StringBuilder error = new StringBuilder();
 
         this.validateDriverInfoCarAge(error, driverUser.getUserDriverInfo());
