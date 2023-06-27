@@ -10,7 +10,7 @@ import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.RideMapper;
 import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.Ride;
-import com.m4l0n.hitchride.pojos.User;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.service.DriverJourneyService;
 import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
@@ -64,7 +64,7 @@ public class RideServiceImpl implements RideService {
     @Override
     public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
         String currentUserName = authenticationService.getAuthenticatedUsername();
-        User currentLoggedInUser = userService.loadUserByUsername(currentUserName);
+        HitchRideUser currentLoggedInUser = userService.loadUserByUsername(currentUserName);
 
         Ride ride = rideMapper.mapDtoToPojo(rideDTO);
         String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride);

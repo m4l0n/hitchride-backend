@@ -8,18 +8,16 @@ import org.springframework.stereotype.Component;
 public class DriverJourneyMapper implements BaseMapper<DriverJourney, DriverJourneyDTO> {
 
     private final OriginDestinationMapper originDestinationMapper;
-    private final UserMapper userMapper;
 
-    public DriverJourneyMapper(OriginDestinationMapper originDestinationMapper, UserMapper userMapper) {
+    public DriverJourneyMapper(OriginDestinationMapper originDestinationMapper) {
         this.originDestinationMapper = originDestinationMapper;
-        this.userMapper = userMapper;
     }
 
     @Override
     public DriverJourneyDTO mapPojoToDto(DriverJourney pojo) {
         return new DriverJourneyDTO(
                 pojo.getDjId(),
-                userMapper.mapPojoToDto(pojo.getDjDriver()),
+                pojo.getDjDriver(),
                 pojo.getDjTimestamp(),
                 originDestinationMapper.mapPojoToDto(pojo.getDjOriginDestination()),
                 pojo.getDjDestinationRange(),
@@ -31,7 +29,7 @@ public class DriverJourneyMapper implements BaseMapper<DriverJourney, DriverJour
     public DriverJourney mapDtoToPojo(DriverJourneyDTO dto) {
         return new DriverJourney(
                 dto.djId(),
-                userMapper.mapDtoToPojo(dto.djDriver()),
+                dto.djDriver(),
                 dto.djTimestamp(),
                 originDestinationMapper.mapDtoToPojo(dto.djOriginDestination()),
                 dto.djDestinationRange(),

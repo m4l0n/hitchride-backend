@@ -8,20 +8,20 @@ import org.springframework.stereotype.Component;
 public class RideMapper implements BaseMapper<Ride, RideDTO> {
 
     private final OriginDestinationMapper originDestinationMapper;
-    private final UserMapper userMapper;
+    private final DriverJourneyMapper driverJourneyMapper;
 
-    public RideMapper(OriginDestinationMapper originDestinationMapper, UserMapper userMapper) {
+    public RideMapper(OriginDestinationMapper originDestinationMapper, DriverJourneyMapper driverJourneyMapper) {
         this.originDestinationMapper = originDestinationMapper;
-        this.userMapper = userMapper;
+        this.driverJourneyMapper = driverJourneyMapper;
     }
 
     @Override
     public RideDTO mapPojoToDto(Ride pojo) {
        return new RideDTO(
                pojo.getRideId(),
-               userMapper.mapPojoToDto(pojo.getRidePassenger()),
+               pojo.getRidePassenger(),
                originDestinationMapper.mapPojoToDto(pojo.getRideOriginDestination()),
-               pojo.getRideDriverJourney()
+               driverJourneyMapper.mapPojoToDto(pojo.getRideDriverJourney())
        );
     }
 
@@ -29,9 +29,9 @@ public class RideMapper implements BaseMapper<Ride, RideDTO> {
     public Ride mapDtoToPojo(RideDTO dto) {
         return new Ride(
                 dto.rideId(),
-                userMapper.mapDtoToPojo(dto.ridePassenger()),
+                dto.ridePassenger(),
                 originDestinationMapper.mapDtoToPojo(dto.rideOriginDestination()),
-                dto.rideDriverJourney()
+                driverJourneyMapper.mapDtoToPojo(dto.rideDriverJourney())
         );
     }
 

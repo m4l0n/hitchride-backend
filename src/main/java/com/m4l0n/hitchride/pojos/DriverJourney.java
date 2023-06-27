@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class DriverJourney {
 
     private String djId;
-    private User djDriver;
+    private HitchRideUser djDriver;
     private Long djTimestamp;
     private OriginDestination djOriginDestination;
     private Integer djDestinationRange;

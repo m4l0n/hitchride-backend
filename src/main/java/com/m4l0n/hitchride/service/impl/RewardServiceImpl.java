@@ -2,6 +2,7 @@ package com.m4l0n.hitchride.service.impl;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.Reward;
 import com.m4l0n.hitchride.pojos.RewardCategory;
 import com.m4l0n.hitchride.service.RewardService;
@@ -56,11 +57,16 @@ public class RewardServiceImpl implements RewardService {
         for (RewardCategory rewardCategory : rewardCategories) {
             Optional<Reward> optionalReward = rewardCategory.getRcRewardsList()
                     .stream()
-                    .filter(reward -> reward.getRewardId().equals(rewardId))
+                    .filter(reward -> reward.getRewardId()
+                            .equals(rewardId))
                     .findFirst();
 
             if (optionalReward.isPresent()) {
                 Reward reward = optionalReward.get();
+                if (reward.getRewardPointsRequired() > userService.getProfile()
+                        .getUserPoints()) {
+                    throw new HitchrideException("Not enough points to redeem this reward. ");
+                }
                 userService.updateUserPoints(reward.getRewardPointsRequired());
                 return reward;
             }
