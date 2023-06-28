@@ -61,4 +61,15 @@ public class RideController {
         }
     }
 
+    @GetMapping("/getUpcomingRides")
+    public Response getUpcomingRides() {
+        try {
+            List<RideDTO> rides = rideService.getUpcomingRides();
+
+            return ResponseAPI.positiveResponse(rides);
+        } catch (Exception e) {
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
 }

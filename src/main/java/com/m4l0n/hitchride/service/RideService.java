@@ -13,4 +13,5 @@ public interface RideService {
 
     List<RideDTO> getRecentDrives() throws ExecutionException, InterruptedException;
 
+    List<RideDTO> getUpcomingRides() throws ExecutionException, InterruptedException;
 }
