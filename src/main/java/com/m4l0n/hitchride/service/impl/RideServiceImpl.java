@@ -107,4 +107,23 @@ public class RideServiceImpl implements RideService {
         return List.of();
     }
 
+    @Override
+    public List<RideDTO> getUpcomingRides() throws ExecutionException, InterruptedException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
+                .whereEqualTo("ridePassenger.userId", currentLoggedInUser)
+                .whereGreaterThanOrEqualTo("rideDriverJourney.djTimestamp", System.currentTimeMillis())
+                .get();
+        QuerySnapshot document = querySnapshot.get();
+
+        if (!document.isEmpty()) {
+            return document.toObjects(Ride.class)
+                    .stream()
+                    .map(rideMapper::mapPojoToDto)
+                    .toList();
+        }
+        return List.of();
+    }
+
 }
