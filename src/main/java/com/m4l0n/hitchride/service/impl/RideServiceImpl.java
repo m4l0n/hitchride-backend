@@ -62,17 +62,17 @@ public class RideServiceImpl implements RideService {
     public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
         String currentUserName = authenticationService.getAuthenticatedUsername();
         HitchRideUser currentLoggedInUser = userService.loadUserByUsername(currentUserName);
-
+        String rideId = rideRef.document()
+                .getId();
         Ride ride = rideMapper.mapDtoToPojo(rideDTO);
+        ride.setRideId(rideId);
+        ride.setRidePassenger(currentLoggedInUser);
+
         String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride);
 
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
-
-        String rideId = rideRef.document()
-                .getId();
-        ride.setRideId(rideId);
 
         rideRef.document(rideId)
                 .set(ride)
