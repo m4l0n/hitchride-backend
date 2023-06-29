@@ -74,5 +74,17 @@ public class UserController {
         }
     }
 
+    @PostMapping("/updateDriverInfo")
+    public Response updateDriverInfo(@RequestBody HitchRideUser user) {
+        try {
+            HitchRideUser updatedUser = userService.updateDriverInfo(user);
+
+            return ResponseAPI.positiveResponse(updatedUser);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
 
 }

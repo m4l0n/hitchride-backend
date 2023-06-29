@@ -15,6 +15,7 @@ import com.m4l0n.hitchride.pojos.DriverInfo;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
+import com.m4l0n.hitchride.service.validations.DriverInfoValidator;
 import com.m4l0n.hitchride.service.validations.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final CollectionReference userRef;
     private final Bucket firebaseStorageBucket;
     private final UserValidator userValidator;
+    private final DriverInfoValidator driverInfoValidator;
     private final AuthenticationService authenticationService;
     private final Gson gson;
     private final ObjectMapper objectMapper;
@@ -47,6 +49,7 @@ public class UserServiceImpl implements UserService {
         userValidator = new UserValidator();
         gson = new Gson();
         objectMapper = new ObjectMapper();
+        driverInfoValidator = new DriverInfoValidator();
     }
 
 
@@ -147,6 +150,26 @@ public class UserServiceImpl implements UserService {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public HitchRideUser updateDriverInfo(HitchRideUser user) throws ExecutionException, InterruptedException {
+        String error = driverInfoValidator.validateDriverInfoCreation(user);
+        if (!error.isEmpty()) {
+            throw new HitchrideException(error);
+        }
+
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        HitchRideUser findUser = loadUserByUsername(currentLoggedInUser);
+
+        if (findUser != null) {
+            ApiFuture<WriteResult> result = userRef.document(currentLoggedInUser)
+                    .update("userDriverInfo", user.getUserDriverInfo());
+            //Wait for the result to finish
+            result.get();
+            return user;
+        }
+        return null;
     }
 
     private String uploadImageToStorage(MultipartFile imageFile) throws IOException {
