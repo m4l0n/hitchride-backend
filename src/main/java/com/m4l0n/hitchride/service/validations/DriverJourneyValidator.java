@@ -3,6 +3,7 @@ package com.m4l0n.hitchride.service.validations;
 import com.google.cloud.firestore.GeoPoint;
 import com.m4l0n.hitchride.pojos.DriverInfo;
 import com.m4l0n.hitchride.pojos.DriverJourney;
+import com.m4l0n.hitchride.pojos.HitchRideUser;
 import io.micrometer.common.util.StringUtils;
 
 public class DriverJourneyValidator {
@@ -13,8 +14,7 @@ public class DriverJourneyValidator {
                 .getOrigin(), driverJourney.getDjOriginDestination()
                 .getDestination());
         this.validateDriverJourneyPrice(errors, driverJourney.getDjPrice());
-        this.validateDriverInfoExists(errors, driverJourney.getDjDriver()
-                .getUserDriverInfo());
+        this.validateDriverInfoExists(errors, driverJourney.getDjDriver());
 
         return errors.toString();
     }
@@ -23,6 +23,7 @@ public class DriverJourneyValidator {
         StringBuilder errors = new StringBuilder();
         this.validateDriverJourneyDriver(errors, driverJourney.getDjDriver()
                 .getUserId(), currentLoggedInUser);
+        this.validateDeleteTime(errors, driverJourney.getDjTimestamp());
 
         return errors.toString();
     }
@@ -37,6 +38,12 @@ public class DriverJourneyValidator {
             errors.append("Driver must be the current logged in user. ");
     }
 
+    private void validateDeleteTime(StringBuilder errors, Long djTimestamp) {
+        long tenMinutesInMillis = 60 * 10 * 1000L;
+        if (djTimestamp < System.currentTimeMillis() + tenMinutesInMillis)
+            errors.append("Driver journey must be deleted within 10 minutes of ride. ");
+    }
+
     private void validateDriverJourneyPrice(StringBuilder errors, String djPrice) {
         if (djPrice.isEmpty())
             errors.append("Price cannot be empty. ");
@@ -45,7 +52,8 @@ public class DriverJourneyValidator {
             errors.append("Price must be a valid number. ");
     }
 
-    private void validateDriverInfoExists(StringBuilder errors, DriverInfo driverInfo) {
+    private void validateDriverInfoExists(StringBuilder errors, HitchRideUser userInfo) {
+        DriverInfo driverInfo = userInfo.getUserDriverInfo();
         if (driverInfo == null) {
             errors.append("Driver info must exist. ");
             return;
@@ -65,6 +73,8 @@ public class DriverJourneyValidator {
             errors.append("Date joined cannot be empty. ");
         if (driverInfo.getDiIsCarSecondHand() == null)
             errors.append("Is car second hand cannot be empty. ");
+        if (StringUtils.isEmpty(userInfo.getUserPhotoUrl()))
+            errors.append("Profile picture cannot be empty. ");
     }
 
 }
