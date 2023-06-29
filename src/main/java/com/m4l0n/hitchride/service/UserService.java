@@ -21,4 +21,5 @@ public interface UserService {
 
     HitchRideUser loadUserByUsername(String username) throws ExecutionException, InterruptedException;
 
+    HitchRideUser updateDriverInfo(HitchRideUser user) throws ExecutionException, InterruptedException;
 }

@@ -72,4 +72,20 @@ public class RideController {
         }
     }
 
+    @PostMapping("/cancelRide")
+    public Response cancelRide(@RequestBody RideDTO rideDTO) {
+        try {
+            Boolean cancelledRide = rideService.cancelRide(rideDTO);
+
+            if (!cancelledRide) {
+                throw new HitchrideException("Something went wrong. Ride not cancelled. Please try again.");
+            }
+
+            return ResponseAPI.emptyPositiveResponse();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
 }

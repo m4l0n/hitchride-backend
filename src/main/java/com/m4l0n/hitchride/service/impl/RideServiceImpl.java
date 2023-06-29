@@ -1,10 +1,7 @@
 package com.m4l0n.hitchride.service.impl;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.RideMapper;
@@ -65,17 +62,17 @@ public class RideServiceImpl implements RideService {
     public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
         String currentUserName = authenticationService.getAuthenticatedUsername();
         HitchRideUser currentLoggedInUser = userService.loadUserByUsername(currentUserName);
-
+        String rideId = rideRef.document()
+                .getId();
         Ride ride = rideMapper.mapDtoToPojo(rideDTO);
+        ride.setRideId(rideId);
+        ride.setRidePassenger(currentLoggedInUser);
+
         String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride);
 
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
-
-        String rideId = rideRef.document()
-                .getId();
-        ride.setRideId(rideId);
 
         rideRef.document(rideId)
                 .set(ride)
@@ -124,6 +121,25 @@ public class RideServiceImpl implements RideService {
                     .toList();
         }
         return List.of();
+    }
+
+    @Override
+    public Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
+        Ride ride = rideMapper.mapDtoToPojo(rideDTO);
+        String errors = rideValidator.validateCancelRide(ride);
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
+        }
+
+        rideRef.document(ride.getRideId())
+                .delete()
+                .get();
+
+        DocumentSnapshot documentSnapshot = rideRef.document(ride.getRideId())
+                .get()
+                .get();
+
+        return !documentSnapshot.exists();
     }
 
 }

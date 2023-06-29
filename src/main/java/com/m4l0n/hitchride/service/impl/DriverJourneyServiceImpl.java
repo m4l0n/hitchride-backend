@@ -149,11 +149,11 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     private List<DriverJourney> getDriverJourneysWithTimestamp(Long timestamp) throws ExecutionException, InterruptedException {
-        long tenMinutesInMillis = 10 * 60 * 1000;
-        long startTime = timestamp - tenMinutesInMillis;
-        long endTime = timestamp + tenMinutesInMillis;
-        QuerySnapshot queryDocumentSnapshots = driverJourneyRef.whereGreaterThanOrEqualTo("djTimestamp", startTime)
-                .whereLessThanOrEqualTo("djTimestamp", endTime)
+        long fifteenMinutesInMillis = 15 * 60 * 1000;
+        //earliest book time is 15 minutes before the ride
+        long startTime = timestamp - fifteenMinutesInMillis;
+        QuerySnapshot queryDocumentSnapshots = driverJourneyRef
+                .whereLessThanOrEqualTo("djTimestamp", startTime)
                 .get()
                 .get();
         if (queryDocumentSnapshots.isEmpty()) {

@@ -4,7 +4,6 @@ package com.m4l0n.hitchride.controller;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.DriverJourneyService;
@@ -54,9 +53,9 @@ public class DriverJourneyController {
     @PostMapping("/delete")
     public Response deleteDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
-            DriverJourneyDTO deletedDriverJourney = driverJourneyService.deleteDriverJourney(driverJourneyDTO);
+            driverJourneyService.deleteDriverJourney(driverJourneyDTO);
 
-            return ResponseAPI.positiveResponse(deletedDriverJourney);
+            return ResponseAPI.emptyPositiveResponse();
         } catch (Exception e) {
             e.printStackTrace();
             throw new HitchrideException(e.getMessage());
