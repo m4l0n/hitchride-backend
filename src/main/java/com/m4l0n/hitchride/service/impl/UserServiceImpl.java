@@ -172,9 +172,32 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    public Boolean updateDriverRatings(Integer newRating) throws ExecutionException, InterruptedException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        HitchRideUser findUser = loadUserByUsername(currentLoggedInUser);
+        if (findUser != null) {
+            int updatedUserRatings = (findUser.getUserDriverInfo()
+                    .getDiRating() + newRating) / (findUser.getUserDriverInfo()
+                    .getDiNumberOfRatings() + 1);
+            ApiFuture<WriteResult> result = userRef.document(currentLoggedInUser)
+                    .update("userDriverInfo.diNumberOfRatings", FieldValue.increment(1),
+                            "userDriverInfo.diRating", updatedUserRatings);
+            //Wait for the result to finish
+            result.get();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public DocumentReference getUserDocumentReference(String userId) throws ExecutionException, InterruptedException {
+        return userRef.document(userId);
+    }
+
     private String uploadImageToStorage(MultipartFile imageFile) throws IOException {
         String fileName = UUID.randomUUID() + StringUtils.getFilenameExtension(imageFile.getOriginalFilename());
-        String storageFileName = "images/" + fileName;
+        String storageFileName = "profile_pictures/" + fileName;
 
         BlobId blobId = BlobId.of(firebaseStorageBucket.getName(), storageFileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
@@ -215,6 +238,7 @@ public class UserServiceImpl implements UserService {
         Long diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBoughtTimestamp")).longValue();
         Boolean diIsCarSecondHand = (Boolean) data.get("diIsCarSecondHand");
         Integer diRating = ((Number) data.get("diRating")).intValue();
+        Integer diNumberOfRatings = ((Number) data.get("diNumberOfRatings")).intValue();
 
         DriverInfo driverInfo = new DriverInfo();
         driverInfo.setDiCarBrand(diCarBrand);
@@ -225,6 +249,7 @@ public class UserServiceImpl implements UserService {
         driverInfo.setDiDateJoinedTimestamp(diDateJoinedTimestamp);
         driverInfo.setDiDateCarBoughtTimestamp(diDateCarBoughtTimestamp);
         driverInfo.setDiRating(diRating);
+        driverInfo.setDiNumberOfRatings(diNumberOfRatings);
 
         return driverInfo;
     }

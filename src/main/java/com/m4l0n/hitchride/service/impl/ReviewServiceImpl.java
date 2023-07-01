@@ -1,20 +1,20 @@
 package com.m4l0n.hitchride.service.impl;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.dto.ReviewDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.ReviewMapper;
 import com.m4l0n.hitchride.pojos.Review;
 import com.m4l0n.hitchride.service.ReviewService;
+import com.m4l0n.hitchride.service.RideService;
+import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.ReviewValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
@@ -24,12 +24,16 @@ public class ReviewServiceImpl implements ReviewService {
     private final CollectionReference reviewRef;
     private final ReviewValidator reviewValidator;
     private final AuthenticationService authenticationService;
+    private final UserService userService;
     private final ReviewMapper reviewMapper;
+    private final RideService rideService;
 
-    public ReviewServiceImpl(Firestore firestore, AuthenticationService authenticationService, ReviewMapper reviewMapper) {
+    public ReviewServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, ReviewMapper reviewMapper, RideService rideService) {
         this.reviewRef = firestore.collection("reviews");
         this.authenticationService = authenticationService;
+        this.userService = userService;
         this.reviewMapper = reviewMapper;
+        this.rideService = rideService;
         this.reviewValidator = new ReviewValidator(reviewRef);
     }
 
@@ -43,8 +47,9 @@ public class ReviewServiceImpl implements ReviewService {
         QuerySnapshot document = querySnapshot.get();
 
         if (!document.isEmpty()) {
-            driverReviews = document.toObjects(Review.class)
+            driverReviews = document.getDocuments()
                     .stream()
+                    .map(this::mapDocumentToPojo)
                     .map(reviewMapper::mapPojoToDto)
                     .toList();
         } else {
@@ -55,8 +60,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .get();
         document = querySnapshot.get();
 
-        List<ReviewDTO> passengerReviews = document.toObjects(Review.class)
+        List<ReviewDTO> passengerReviews = document.getDocuments()
                 .stream()
+                .map(this::mapDocumentToPojo)
                 .map(reviewMapper::mapPojoToDto)
                 .toList();
 
@@ -68,19 +74,35 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewDTO createReview(ReviewDTO reviewDTO) throws ExecutionException, InterruptedException, HitchrideException {
+    public ReviewDTO createReview(ReviewDTO reviewDTO) throws ExecutionException, InterruptedException {
         Review review = reviewMapper.mapDtoToPojo(reviewDTO);
-        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-        String errors = reviewValidator.validateCreateReview(review, currentLoggedInUser);
+        String errors = reviewValidator.validateCreateReview(review);
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
         String docId = reviewRef.document()
                 .getId();
         review.setReviewId(docId);
-        WriteResult writeResult = reviewRef.document(docId)
+
+        DocumentReference documentReference = rideService.getRideReferenceById(review.getReviewRide());
+
+        reviewRef.document(docId)
                 .set(review)
                 .get();
+        reviewRef.document(docId).update("reviewRide", documentReference).get();
+
+        userService.updateDriverRatings(review.getReviewRating());
         return reviewDTO;
+    }
+
+    private Review mapDocumentToPojo(DocumentSnapshot document) {
+        Map<String, Object> objectMap = document.getData();
+        return new Review(
+                (String) objectMap.get("reviewId"),
+                (String) objectMap.get("reviewDescription"),
+                ((Number) objectMap.get("reviewRating")).intValue(),
+                ((Number) objectMap.get("reviewTimestamp")).longValue(),
+                ((DocumentSnapshot) objectMap.get("reviewRide")).getId()
+        );
     }
 }

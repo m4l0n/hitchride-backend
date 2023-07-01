@@ -13,6 +13,6 @@ public class Review {
     private String reviewDescription;
     private Integer reviewRating;
     private Long reviewTimestamp;
-    private Ride reviewRide;
+    private String reviewRide;
 
 }

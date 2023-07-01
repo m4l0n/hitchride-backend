@@ -2,22 +2,24 @@ package com.m4l0n.hitchride.service.impl;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.RideMapper;
-import com.m4l0n.hitchride.pojos.DriverJourney;
-import com.m4l0n.hitchride.pojos.Ride;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
+import com.m4l0n.hitchride.pojos.OriginDestination;
+import com.m4l0n.hitchride.pojos.Ride;
 import com.m4l0n.hitchride.service.DriverJourneyService;
 import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.RideValidator;
+import lombok.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @Service
 public class RideServiceImpl implements RideService {
@@ -43,90 +45,89 @@ public class RideServiceImpl implements RideService {
     public List<RideDTO> getRecentRides() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
 
-        ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
-                .whereEqualTo("ridePassenger.userId", currentLoggedInUser)
+        DocumentReference userRef = userService.getUserDocumentReference(currentLoggedInUser);
+
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("ridePassenger", userRef)
                 .limit(5)
                 .get();
-        QuerySnapshot document = querySnapshot.get();
-
-        if (!document.isEmpty()) {
-            return document.toObjects(Ride.class)
-                    .stream()
-                    .map(rideMapper::mapPojoToDto)
-                    .collect(Collectors.toList());
-        }
-        return List.of();
+        return getRideDTOS(querySnapshot);
     }
 
     @Override
     public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
-        String currentUserName = authenticationService.getAuthenticatedUsername();
-        HitchRideUser currentLoggedInUser = userService.loadUserByUsername(currentUserName);
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
+        DriverJourneyDTO driverJourneyDTO = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
+                .djId());
         String rideId = rideRef.document()
                 .getId();
-        Ride ride = rideMapper.mapDtoToPojo(rideDTO);
+        RideDTO tempDTO = new RideDTO(
+                rideId,
+                passenger,
+                rideDTO.rideOriginDestination(),
+                driverJourneyDTO
+        );
+        Ride ride = rideMapper.mapDtoToPojo(tempDTO);
         ride.setRideId(rideId);
         ride.setRidePassenger(currentLoggedInUser);
 
-        String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride);
+        String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride, driverJourneyDTO.djDriver()
+                .getUserId());
 
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
 
+        DocumentReference userRef = userService.getUserDocumentReference(ride.getRidePassenger());
+        DocumentReference djRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
+
         rideRef.document(rideId)
                 .set(ride)
                 .get();
+        rideRef.document(rideId)
+                .update("ridePassenger", userRef, "rideDriverJourney", djRef)
+                .get();
 
-        DriverJourney acceptedDriverJourney = driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney());
-        if (acceptedDriverJourney == null) {
-            return null;
+        boolean acceptedDriverJourney = driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney());
+        if (acceptedDriverJourney) {
+            return rideDTO;
         }
-        return rideDTO;
+        return null;
     }
 
     @Override
     public List<RideDTO> getRecentDrives() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
 
-        ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
-                .whereEqualTo("rideDriverJourney.djDriver.userId", currentLoggedInUser)
+        List<DocumentReference> driverJourneyRefs = driverJourneyService.getDriverJourneyRefsByDriverUserId(currentLoggedInUser);
+
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereIn("rideDriverJourney", driverJourneyRefs)
                 .limit(5)
                 .get();
-        QuerySnapshot document = querySnapshot.get();
 
-        if (!document.isEmpty()) {
-            return document.toObjects(Ride.class)
-                    .stream()
-                    .map(rideMapper::mapPojoToDto)
-                    .toList();
-        }
-        return List.of();
+        return getRideDTOS(querySnapshot);
     }
 
     @Override
     public List<RideDTO> getUpcomingRides() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        DocumentReference userRef = userService.getUserDocumentReference(currentLoggedInUser);
+        List<DocumentReference> driverJourneyRefs = driverJourneyService.getFutureDriverJourneyRefs();
 
-        ApiFuture<QuerySnapshot> querySnapshot = rideRef.orderBy("rideDriverJourney.djTimestamp", Query.Direction.DESCENDING)
-                .whereEqualTo("ridePassenger.userId", currentLoggedInUser)
-                .whereGreaterThanOrEqualTo("rideDriverJourney.djTimestamp", System.currentTimeMillis())
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("ridePassenger", userRef)
+                .whereIn("rideDriverJourney", driverJourneyRefs)
                 .get();
-        QuerySnapshot document = querySnapshot.get();
-
-        if (!document.isEmpty()) {
-            return document.toObjects(Ride.class)
-                    .stream()
-                    .map(rideMapper::mapPojoToDto)
-                    .toList();
-        }
-        return List.of();
+        return getRideDTOS(querySnapshot);
     }
 
     @Override
     public Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
         Ride ride = rideMapper.mapDtoToPojo(rideDTO);
-        String errors = rideValidator.validateCancelRide(ride);
+        String errors = rideValidator.validateCancelRide(ride, rideDTO.rideDriverJourney()
+                .djTimestamp());
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
@@ -140,6 +141,56 @@ public class RideServiceImpl implements RideService {
                 .get();
 
         return !documentSnapshot.exists();
+    }
+
+    @Override
+    public RideDTO getRideById(String rideId) throws ExecutionException, InterruptedException {
+        DocumentSnapshot documentSnapshot = rideRef.document(rideId)
+                .get()
+                .get();
+        if (documentSnapshot.exists()) {
+            return rideMapper.mapPojoToDto(mapDocumentToRide(documentSnapshot));
+        }
+        return null;
+    }
+
+    @Override
+    public DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException {
+        return rideRef.document(rideId);
+    }
+
+    private Ride mapDocumentToRide(DocumentSnapshot documentSnapshot) {
+        Map<String, Object> documentData = documentSnapshot.getData();
+        DocumentReference userRef = documentSnapshot.get("ridePassenger", DocumentReference.class);
+        DocumentReference djRef = documentSnapshot.get("rideDriverJourney", DocumentReference.class);
+        Map<String, GeoPoint> geoPointMap = (Map<String, GeoPoint>) documentData.get("rideOriginDestination");
+        return new Ride(
+                (String) documentData.get("rideId"),
+                userRef.getId(),
+                new OriginDestination(
+                        geoPointMap.get("origin"),
+                        geoPointMap.get("destination")
+                ),
+                djRef.getId()
+        );
+    }
+
+    @NonNull
+    private List<RideDTO> getRideDTOS(ApiFuture<QuerySnapshot> querySnapshot) throws InterruptedException, ExecutionException {
+        QuerySnapshot document = querySnapshot.get();
+
+        if (!document.isEmpty()) {
+            return document.getDocuments()
+                    .stream()
+                    .map(this::mapDocumentToRide)
+                    .map(rideMapper::mapPojoToDto)
+                    .sorted((r1, r2) -> r2.rideDriverJourney()
+                            .djTimestamp()
+                            .compareTo(r1.rideDriverJourney()
+                                    .djTimestamp()))
+                    .toList();
+        }
+        return List.of();
     }
 
 }
