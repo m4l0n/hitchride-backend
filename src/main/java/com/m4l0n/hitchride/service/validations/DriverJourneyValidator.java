@@ -8,21 +8,19 @@ import io.micrometer.common.util.StringUtils;
 
 public class DriverJourneyValidator {
 
-    public String validateCreateDriverJourney(DriverJourney driverJourney) {
+    public String validateCreateDriverJourney(DriverJourney driverJourney, HitchRideUser currentLoggedInUser) {
         StringBuilder errors = new StringBuilder();
         this.validateDriverJourneyLocation(errors, driverJourney.getDjOriginDestination()
                 .getOrigin(), driverJourney.getDjOriginDestination()
                 .getDestination());
         this.validateDriverJourneyPrice(errors, driverJourney.getDjPrice());
-        this.validateDriverInfoExists(errors, driverJourney.getDjDriver());
+        this.validateDriverInfoExists(errors, currentLoggedInUser);
 
         return errors.toString();
     }
 
-    public String validateDeleteDriverJourney(DriverJourney driverJourney, String currentLoggedInUser) {
+    public String validateDeleteDriverJourney(DriverJourney driverJourney, HitchRideUser currentLoggedInUser) {
         StringBuilder errors = new StringBuilder();
-        this.validateDriverJourneyDriver(errors, driverJourney.getDjDriver()
-                .getUserId(), currentLoggedInUser);
         this.validateDeleteTime(errors, driverJourney.getDjTimestamp());
 
         return errors.toString();
@@ -31,11 +29,6 @@ public class DriverJourneyValidator {
     private void validateDriverJourneyLocation(StringBuilder errors, GeoPoint driverJourneyOrigin, GeoPoint driverJourneyDestination) {
         if (driverJourneyOrigin.equals(driverJourneyDestination))
             errors.append("Origin and destination cannot be the same. ");
-    }
-
-    private void validateDriverJourneyDriver(StringBuilder errors, String djDriverId, String currentLoggedInUser) {
-        if (!djDriverId.equals(currentLoggedInUser))
-            errors.append("Driver must be the current logged in user. ");
     }
 
     private void validateDeleteTime(StringBuilder errors, Long djTimestamp) {

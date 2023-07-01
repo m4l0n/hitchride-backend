@@ -1,5 +1,6 @@
 package com.m4l0n.hitchride.service;
 
+import com.google.cloud.firestore.DocumentReference;
 import com.m4l0n.hitchride.dto.RideDTO;
 
 import java.util.List;
@@ -16,4 +17,8 @@ public interface RideService {
     List<RideDTO> getUpcomingRides() throws ExecutionException, InterruptedException;
 
     Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException;
+
+    RideDTO getRideById(String rideId) throws ExecutionException, InterruptedException;
+
+    DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException;
 }

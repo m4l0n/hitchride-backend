@@ -13,11 +13,10 @@ public class ReviewValidator {
         this.reviewRef = reviewRef;
     }
 
-    public String validateCreateReview(Review review, String loggedInUserId) {
+    public String validateCreateReview(Review review) {
         StringBuilder errors = new StringBuilder();
 
-        this.validateReviewExists(errors, review.getReviewRide().getRideId());
-        this.validateReviewFromPassenger(errors, review.getReviewRide().getRidePassenger().getUserId(), loggedInUserId);
+        this.validateReviewExists(errors, review.getReviewRide());
 
         return errors.toString();
     }
@@ -31,12 +30,6 @@ public class ReviewValidator {
             }
         } catch (Exception e) {
             errors.append("Something went wrong while validating review. ");
-        }
-    }
-
-    private void validateReviewFromPassenger(StringBuilder errors, String reviewPassengerId, String loggedInUserId) {
-        if (!reviewPassengerId.equals(loggedInUserId)) {
-            errors.append("You can only review rides you have been a passenger on. ");
         }
     }
 

@@ -5,6 +5,11 @@ spring:
         jwt:
           jwk-set-uri: https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
           issuer-uri: https://securetoken.google.com/c2c-ehailing
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      resolve-lazily: true
+
 
 logging:
   level:
@@ -15,6 +20,8 @@ logging:
 
 server:
   port: ${PORT:8080}
+  tomcat:
+    max-swallow-size: 100MB
 
 springdoc:
   api-docs:

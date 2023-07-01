@@ -17,5 +17,6 @@ public class DriverInfo {
     private Long diDateCarBoughtTimestamp;
     private Boolean diIsCarSecondHand;
     private Integer diRating;
+    private Integer diNumberOfRatings;
 
 }

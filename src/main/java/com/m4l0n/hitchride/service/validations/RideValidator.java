@@ -1,42 +1,41 @@
 package com.m4l0n.hitchride.service.validations;
 
 import com.m4l0n.hitchride.pojos.Ride;
-import com.m4l0n.hitchride.pojos.HitchRideUser;
 
 public class RideValidator {
 
-    public String validateCreateRide(HitchRideUser currentLoggedInUser, Ride ride) {
+    public String validateCreateRide(String currentLoggedInUser, Ride ride, String driver) {
         StringBuilder errors = new StringBuilder();
 
-        this.validateRideParties(errors, ride.getRidePassenger(), ride.getRideDriverJourney().getDjDriver());
+        this.validateRideParties(errors, ride.getRidePassenger(), driver);
         this.validatePassenger(errors, currentLoggedInUser, ride.getRidePassenger());
 
         return errors.toString();
     }
 
-    public String validateCancelRide(Ride ride) {
+    public String validateCancelRide(Ride ride, Long rideTimestamp) {
         StringBuilder errors = new StringBuilder();
 
-        this.validateRideCancelTimestamp(errors, ride);
+        this.validateRideCancelTimestamp(errors, rideTimestamp);
 
         return errors.toString();
     }
 
-    private void validateRideParties(StringBuilder errors, HitchRideUser passenger, HitchRideUser driver) {
+    private void validateRideParties(StringBuilder errors, String passenger, String driver) {
         if (passenger.equals(driver)) {
             errors.append("Passenger and driver cannot be the same person.  ");
         }
     }
 
-    private void validatePassenger(StringBuilder errors, HitchRideUser currentLoggedInUser, HitchRideUser passenger) {
+    private void validatePassenger(StringBuilder errors, String currentLoggedInUser, String passenger) {
         if (!currentLoggedInUser.equals(passenger)) {
             errors.append("Passenger must be the current logged in user. ");
         }
     }
 
-    private void validateRideCancelTimestamp(StringBuilder errors, Ride ride) {
+    private void validateRideCancelTimestamp(StringBuilder errors, Long rideTimestamp) {
         long fiveMinutesTimestamp = 60 * 5 * 1000L;
-        if (ride.getRideDriverJourney().getDjTimestamp() - System.currentTimeMillis() < fiveMinutesTimestamp) {
+        if (rideTimestamp - System.currentTimeMillis() < fiveMinutesTimestamp) {
             errors.append("Ride cannot be cancelled within 5 minutes of the ride start time. ");
         }
     }
