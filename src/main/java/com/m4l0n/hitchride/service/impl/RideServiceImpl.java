@@ -15,7 +15,7 @@ import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.RideValidator;
 import lombok.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,22 +28,18 @@ public class RideServiceImpl implements RideService {
     private final CollectionReference rideRef;
     private final AuthenticationService authenticationService;
     private final UserService userService;
-    private DriverJourneyService driverJourneyService;
+    private final DriverJourneyService driverJourneyService;
     private final RideValidator rideValidator;
     private final RideMapper rideMapper;
 
 
-    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, RideMapper rideMapper) {
+    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, RideMapper rideMapper) {
         this.rideRef = firestore.collection("rides");
         this.authenticationService = authenticationService;
         this.userService = userService;
+        this.driverJourneyService = driverJourneyService;
         this.rideMapper = rideMapper;
         rideValidator = new RideValidator();
-    }
-
-    @Autowired
-    public void setDriverJourneyService(DriverJourneyService driverJourneyService) {
-        this.driverJourneyService = driverJourneyService;
     }
 
     @Override
