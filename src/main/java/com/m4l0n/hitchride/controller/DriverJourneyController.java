@@ -25,6 +25,11 @@ public class DriverJourneyController {
         this.driverJourneyService = driverJourneyService;
     }
 
+    /**
+     * Create a new driver journey
+     * @userType driver
+     * @param driverJourneyDTO driver journey to be created
+     */
     @PostMapping("/create")
     public Response postNewDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
@@ -37,6 +42,11 @@ public class DriverJourneyController {
         }
     }
 
+    /**
+     * Search for rides based on the criteria
+     * @userType driver
+     * @param searchRideCriteria search criteria (origin, destination, date)
+     */
     @PostMapping("/searchRides")
     public Response searchRides(@RequestBody SearchRideCriteriaDTO searchRideCriteria) {
         try {
@@ -50,6 +60,11 @@ public class DriverJourneyController {
         }
     }
 
+    /**
+     * Delete a driver journey
+     * @userType driver
+     * @param driverJourneyDTO driver journey to delete
+     */
     @PostMapping("/delete")
     public Response deleteDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
         try {
@@ -62,6 +77,10 @@ public class DriverJourneyController {
         }
     }
 
+    /**
+     * Get all the upcoming driver journeys from the current user
+     * @userType driver
+     */
     @GetMapping("/getUserDj")
     public Response getUserDriverJourneys() {
         try {
@@ -73,4 +92,5 @@ public class DriverJourneyController {
             throw new HitchrideException(e.getMessage());
         }
     }
+
 }
