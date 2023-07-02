@@ -15,6 +15,7 @@ import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.RideValidator;
 import lombok.NonNull;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class RideServiceImpl implements RideService {
     private final RideMapper rideMapper;
 
 
-    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, DriverJourneyService driverJourneyService, RideMapper rideMapper) {
+    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, RideMapper rideMapper) {
         this.rideRef = firestore.collection("rides");
         this.authenticationService = authenticationService;
         this.userService = userService;
@@ -157,6 +158,33 @@ public class RideServiceImpl implements RideService {
     @Override
     public DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException {
         return rideRef.document(rideId);
+    }
+
+    @Override
+    public Boolean deleteRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("rideDriverJourney", driverJourneyService.getDriverJourneyRefById(driverJourneyId))
+                .get();
+        List<RideDTO> rides = getRideDTOS(querySnapshot);
+        if (rides.size() == 1) {
+            rideRef.document(rides.get(0)
+                    .rideId())
+                    .delete()
+                    .get();
+        }
+        return true;
+    }
+
+    @Override
+    public RideDTO getRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException{
+        ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("rideDriverJourney", driverJourneyService.getDriverJourneyRefById(driverJourneyId))
+                .get();
+        List<RideDTO> rides = getRideDTOS(querySnapshot);
+        if (rides.size() == 1) {
+            return rides.get(0);
+        }
+        return null;
     }
 
     private Ride mapDocumentToRide(DocumentSnapshot documentSnapshot) {

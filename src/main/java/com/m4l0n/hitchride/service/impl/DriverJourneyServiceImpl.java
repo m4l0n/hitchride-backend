@@ -12,10 +12,12 @@ import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.pojos.OriginDestination;
 import com.m4l0n.hitchride.pojos.SearchRideCriteria;
 import com.m4l0n.hitchride.service.DriverJourneyService;
+import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.DriverJourneyValidator;
 import com.m4l0n.hitchride.utility.GoogleMapsApiClient;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -38,15 +40,17 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     private final GoogleMapsApiClient googleMapsApiClient;
     private final DriverJourneyMapper driverJourneyMapper;
     private final SearchRideCriteriaMapper searchRideCriteriaMapper;
+    private final RideService rideService;
 
 
-    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, GoogleMapsApiClient googleMapsApiClient, DriverJourneyMapper driverJourneyMapper, SearchRideCriteriaMapper searchRideCriteriaMapper) {
+    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, GoogleMapsApiClient googleMapsApiClient, DriverJourneyMapper driverJourneyMapper, SearchRideCriteriaMapper searchRideCriteriaMapper, @Lazy RideService rideService) {
         this.driverJourneyRef = firestore.collection("driver_journey");
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.googleMapsApiClient = googleMapsApiClient;
         this.driverJourneyMapper = driverJourneyMapper;
         this.searchRideCriteriaMapper = searchRideCriteriaMapper;
+        this.rideService = rideService;
         driverJourneyValidator = new DriverJourneyValidator();
     }
 
@@ -140,6 +144,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
         }
 
         executeDeleteDriverJourney(driverJourneyDTO.djId(), DJStatus.CANCELLED);
+        rideService.deleteRideByDriverJourney(driverJourneyDTO.djId());
         return driverJourneyDTO;
     }
 

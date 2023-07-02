@@ -22,6 +22,11 @@ public class RideController {
         this.rideService = rideService;
     }
 
+    /**
+     * Get recent rides for a passenger (rides they've booked)
+     * Limited to 5
+     * @userType passenger
+     */
     @GetMapping("/getRecentRides")
     public Response getRecentRides() {
         try {
@@ -34,6 +39,11 @@ public class RideController {
         }
     }
 
+    /**
+     * Accept a ride, make a booking
+     * @userType passenger
+     * @param rideDTO ride to accept
+     */
     @PostMapping("/acceptRide")
     public Response acceptRide(@RequestBody RideDTO rideDTO) {
         try {
@@ -50,6 +60,11 @@ public class RideController {
         }
     }
 
+    /**
+     * Get recent drives for a driver (rides they've created)
+     * Limited to 5
+     * @userType driver
+     */
     @GetMapping("/getRecentDrives")
     public Response getRecentDrives() {
         try {
@@ -62,6 +77,10 @@ public class RideController {
         }
     }
 
+    /**
+     * Get upcoming rides
+     * @userType driver
+     */
     @GetMapping("/getUpcomingRides")
     public Response getUpcomingRides() {
         try {
@@ -73,6 +92,11 @@ public class RideController {
         }
     }
 
+    /**
+     * Cancel a ride
+     * @userType passenger
+     * @param rideDTO ride to cancel
+     */
     @PostMapping("/cancelRide")
     public Response cancelRide(@RequestBody RideDTO rideDTO) {
         try {
@@ -83,6 +107,20 @@ public class RideController {
             }
 
             return ResponseAPI.emptyPositiveResponse();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getRideByDriverJourney")
+    public Response getRideByDriverJourney(@RequestParam String driverJourneyId) {
+        try {
+            RideDTO ride = rideService.getRideByDriverJourney(driverJourneyId);
+            if (ride == null) {
+                return ResponseAPI.positiveResponse(null);
+            }
+            return ResponseAPI.positiveResponse(ride);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HitchrideException(e.getMessage());

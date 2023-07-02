@@ -21,4 +21,8 @@ public interface RideService {
     RideDTO getRideById(String rideId) throws ExecutionException, InterruptedException;
 
     DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException;
+
+    Boolean deleteRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException;
+
+    RideDTO getRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException;
 }
