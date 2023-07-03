@@ -35,19 +35,26 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendNotification(String targetUser, String title, String body) throws InterruptedException, ExecutionException, FirebaseMessagingException {
+    public String sendNotification(String targetUser, String title, String body, String type, String... payload) throws InterruptedException, ExecutionException, FirebaseMessagingException {
         String fcmToken = findFcmTokenByUserId(targetUser);
         Notification notification = Notification.builder()
                 .setTitle(title)
                 .setBody(body)
                 .build();
 
+        Map<String, String> data = new java.util.HashMap<>(Map.of("type", type));
+        if (payload.length > 0) {
+            data.put("payload", payload[0]);
+        }
+
         Message message = Message.builder()
                 .setNotification(notification)
+                .putAllData(data)
                 .setToken(fcmToken)
                 .build();
 
-        FirebaseMessaging.getInstance().send(message);
+        return FirebaseMessaging.getInstance()
+                .send(message);
     }
 
     private String findFcmTokenByUserId(String userId) throws ExecutionException, InterruptedException {

@@ -8,6 +8,6 @@ public interface NotificationService {
 
     String registerFcmToken(String fcmToken) throws InterruptedException, ExecutionException;
 
-    void sendNotification(String fcmToken, String title, String body) throws InterruptedException, ExecutionException, FirebaseMessagingException;
+    String sendNotification(String targetUser, String title, String body, String type, String... payload) throws InterruptedException, ExecutionException, FirebaseMessagingException;
 
 }
