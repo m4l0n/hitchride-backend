@@ -3,11 +3,12 @@ package com.m4l0n.hitchride.service.impl;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
-import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.enums.RideStatus;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
+import com.m4l0n.hitchride.mapping.DriverJourneyMapper;
 import com.m4l0n.hitchride.mapping.RideMapper;
+import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.pojos.OriginDestination;
 import com.m4l0n.hitchride.pojos.Ride;
@@ -35,15 +36,17 @@ public class RideServiceImpl implements RideService {
     private final NotificationService notificationService;
     private final RideValidator rideValidator;
     private final RideMapper rideMapper;
+    private final DriverJourneyMapper driverJourneyMapper;
 
 
-    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, NotificationService notificationService, RideMapper rideMapper) {
+    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, NotificationService notificationService, RideMapper rideMapper, DriverJourneyMapper driverJourneyMapper) {
         this.rideRef = firestore.collection("rides");
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.driverJourneyService = driverJourneyService;
         this.notificationService = notificationService;
         this.rideMapper = rideMapper;
+        this.driverJourneyMapper = driverJourneyMapper;
         rideValidator = new RideValidator();
     }
 
@@ -61,10 +64,11 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+    public RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+        //Fill ride object
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
-        DriverJourneyDTO driverJourneyDTO = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
+        DriverJourney driverJourney = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
                 .djId());
         String rideId = rideRef.document()
                 .getId();
@@ -72,27 +76,26 @@ public class RideServiceImpl implements RideService {
                 rideId,
                 passenger,
                 rideDTO.rideOriginDestination(),
-                driverJourneyDTO
+                driverJourneyMapper.mapPojoToDto(driverJourney)
         );
         Ride ride = rideMapper.mapDtoToPojo(tempDTO);
         ride.setRideId(rideId);
         ride.setRidePassenger(currentLoggedInUser);
         ride.setRideStatus(RideStatus.ACTIVE);
 
-        String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride, driverJourneyDTO.djDriver()
-                .getUserId());
+        String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride, driverJourney.getDjDriver());
+        if (!errors.isEmpty()) {
+            throw new HitchrideException(errors);
+        }
 
-        notificationService.sendNotification(driverJourneyDTO.djDriver()
-                        .getUserId(),
+        //Notify driver
+        notificationService.sendNotification(driverJourney.getDjDriver(),
                 "New Ride Booking",
                 "A user has booked your ride!",
                 "common",
                 rideDTO.rideId());
 
-        if (!errors.isEmpty()) {
-            throw new HitchrideException(errors);
-        }
-
+        //Save ride in Firestore
         DocumentReference userRef = userService.getUserDocumentReference(ride.getRidePassenger());
         DocumentReference djRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
 
@@ -140,10 +143,10 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
-        Ride ride = rideMapper.mapDtoToPojo(rideDTO);
-        String errors = rideValidator.validateCancelRide(ride, rideDTO.rideDriverJourney()
-                .djTimestamp());
+    public Boolean cancelRide(String rideId) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+        Ride ride = getRideById(rideId);
+        DriverJourney driverJourney = driverJourneyService.getDriverJourneyById(ride.getRideDriverJourney());
+        String errors = rideValidator.validateCancelRide(ride, driverJourney.getDjTimestamp());
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
@@ -156,20 +159,21 @@ public class RideServiceImpl implements RideService {
                 .get()
                 .get();
 
-        notificationService.sendNotification(rideDTO.rideDriverJourney()
-                .djDriver()
-                .getUserId(), "Ride Cancelled", "A user has cancelled your ride!", "common");
+        notificationService.sendNotification(driverJourney.getDjDriver(),
+                "Ride Cancelled",
+                "A user has cancelled your ride!",
+                "common");
 
         return !documentSnapshot.exists();
     }
 
     @Override
-    public RideDTO getRideById(String rideId) throws ExecutionException, InterruptedException {
+    public Ride getRideById(String rideId) throws ExecutionException, InterruptedException {
         DocumentSnapshot documentSnapshot = rideRef.document(rideId)
                 .get()
                 .get();
         if (documentSnapshot.exists()) {
-            return rideMapper.mapPojoToDto(mapDocumentToRide(documentSnapshot));
+            return mapDocumentToRide(documentSnapshot);
         }
         return null;
     }

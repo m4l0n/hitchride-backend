@@ -11,11 +11,13 @@ import org.springframework.stereotype.Component;
 public class RideMapper implements BaseMapper<Ride, RideDTO> {
 
     private final OriginDestinationMapper originDestinationMapper;
+    private final DriverJourneyMapper driverJourneyMapper;
     private final DriverJourneyService driverJourneyService;
     private final UserService userService;
 
-    public RideMapper(OriginDestinationMapper originDestinationMapper, DriverJourneyService driverJourneyService, UserService userService) {
+    public RideMapper(OriginDestinationMapper originDestinationMapper, DriverJourneyMapper driverJourneyMapper, DriverJourneyService driverJourneyService, UserService userService) {
         this.originDestinationMapper = originDestinationMapper;
+        this.driverJourneyMapper = driverJourneyMapper;
         this.driverJourneyService = driverJourneyService;
         this.userService = userService;
     }
@@ -27,7 +29,7 @@ public class RideMapper implements BaseMapper<Ride, RideDTO> {
                 pojo.getRideId(),
                 userService.loadUserByUsername(pojo.getRidePassenger()),
                 originDestinationMapper.mapPojoToDto(pojo.getRideOriginDestination()),
-                driverJourneyService.getDriverJourneyById(pojo.getRideDriverJourney())
+                driverJourneyMapper.mapPojoToDto(driverJourneyService.getDriverJourneyById(pojo.getRideDriverJourney()))
         );
     }
 
@@ -35,9 +37,11 @@ public class RideMapper implements BaseMapper<Ride, RideDTO> {
     public Ride mapDtoToPojo(RideDTO dto) {
         return new Ride(
                 dto.rideId(),
-                dto.ridePassenger().getUserId(),
+                dto.ridePassenger()
+                        .getUserId(),
                 originDestinationMapper.mapDtoToPojo(dto.rideOriginDestination()),
-                dto.rideDriverJourney().djId()
+                dto.rideDriverJourney()
+                        .djId()
         );
     }
 
