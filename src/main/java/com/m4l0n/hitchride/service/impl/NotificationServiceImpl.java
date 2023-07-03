@@ -27,8 +27,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public String registerFcmToken(String fcmToken) throws InterruptedException, ExecutionException {
         String userId = authenticationService.getAuthenticatedUsername();
-        Map<String, String> data = Map.of("fcmToken", fcmToken, "userId", userId);
-        notificationCollection.document()
+        Map<String, String> data = Map.of("fcmToken", fcmToken);
+        notificationCollection.document(userId)
                 .set(data)
                 .get();
         return userId;
@@ -58,11 +58,9 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private String findFcmTokenByUserId(String userId) throws ExecutionException, InterruptedException {
-        return notificationCollection.whereEqualTo("userId", userId)
+        return notificationCollection.document(userId)
                 .get()
                 .get()
-                .getDocuments()
-                .get(0)
                 .getString("fcmToken");
     }
 
