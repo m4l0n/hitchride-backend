@@ -2,14 +2,17 @@ package com.m4l0n.hitchride.service.impl;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.RideDTO;
+import com.m4l0n.hitchride.enums.RideStatus;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.RideMapper;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.pojos.OriginDestination;
 import com.m4l0n.hitchride.pojos.Ride;
 import com.m4l0n.hitchride.service.DriverJourneyService;
+import com.m4l0n.hitchride.service.NotificationService;
 import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
@@ -29,15 +32,17 @@ public class RideServiceImpl implements RideService {
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final DriverJourneyService driverJourneyService;
+    private final NotificationService notificationService;
     private final RideValidator rideValidator;
     private final RideMapper rideMapper;
 
 
-    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, RideMapper rideMapper) {
+    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, NotificationService notificationService, RideMapper rideMapper) {
         this.rideRef = firestore.collection("rides");
         this.authenticationService = authenticationService;
         this.userService = userService;
         this.driverJourneyService = driverJourneyService;
+        this.notificationService = notificationService;
         this.rideMapper = rideMapper;
         rideValidator = new RideValidator();
     }
@@ -56,7 +61,7 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
+    public RideDTO acceptRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
         DriverJourneyDTO driverJourneyDTO = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
@@ -72,9 +77,17 @@ public class RideServiceImpl implements RideService {
         Ride ride = rideMapper.mapDtoToPojo(tempDTO);
         ride.setRideId(rideId);
         ride.setRidePassenger(currentLoggedInUser);
+        ride.setRideStatus(RideStatus.ACTIVE);
 
         String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride, driverJourneyDTO.djDriver()
                 .getUserId());
+
+        notificationService.sendNotification(driverJourneyDTO.djDriver()
+                        .getUserId(),
+                "New Ride Booking",
+                "A user has booked your ride!",
+                "common",
+                rideDTO.rideId());
 
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
@@ -104,6 +117,7 @@ public class RideServiceImpl implements RideService {
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getDriverJourneyRefsByDriverUserId(currentLoggedInUser);
 
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("rideStatus", RideStatus.COMPLETED)
                 .whereIn("rideDriverJourney", driverJourneyRefs)
                 .limit(5)
                 .get();
@@ -118,6 +132,7 @@ public class RideServiceImpl implements RideService {
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getFutureDriverJourneyRefs();
 
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
+                .whereEqualTo("rideStatus", RideStatus.ACTIVE)
                 .whereEqualTo("ridePassenger", userRef)
                 .whereIn("rideDriverJourney", driverJourneyRefs)
                 .get();
@@ -125,7 +140,7 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException {
+    public Boolean cancelRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         Ride ride = rideMapper.mapDtoToPojo(rideDTO);
         String errors = rideValidator.validateCancelRide(ride, rideDTO.rideDriverJourney()
                 .djTimestamp());
@@ -140,6 +155,10 @@ public class RideServiceImpl implements RideService {
         DocumentSnapshot documentSnapshot = rideRef.document(ride.getRideId())
                 .get()
                 .get();
+
+        notificationService.sendNotification(rideDTO.rideDriverJourney()
+                .djDriver()
+                .getUserId(), "Ride Cancelled", "A user has cancelled your ride!", "common");
 
         return !documentSnapshot.exists();
     }
@@ -161,22 +180,25 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public Boolean deleteRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException {
+    public Boolean deleteRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
                 .whereEqualTo("rideDriverJourney", driverJourneyService.getDriverJourneyRefById(driverJourneyId))
                 .get();
         List<RideDTO> rides = getRideDTOS(querySnapshot);
         if (rides.size() == 1) {
             rideRef.document(rides.get(0)
-                    .rideId())
+                            .rideId())
                     .delete()
                     .get();
+            notificationService.sendNotification(rides.get(0)
+                    .ridePassenger()
+                    .getUserId(), "Ride Cancelled", "Your ride has been cancelled!", "common");
         }
         return true;
     }
 
     @Override
-    public RideDTO getRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException{
+    public RideDTO getRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
                 .whereEqualTo("rideDriverJourney", driverJourneyService.getDriverJourneyRefById(driverJourneyId))
                 .get();
@@ -185,6 +207,18 @@ public class RideServiceImpl implements RideService {
             return rides.get(0);
         }
         return null;
+    }
+
+    @Override
+    public RideDTO completeRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+        rideRef.document(rideDTO.rideId())
+                .update("rideStatus", RideStatus.COMPLETED)
+                .get();
+
+        notificationService.sendNotification(rideDTO.ridePassenger()
+                .getUserId(), "Ride Completed", "Your ride has been completed!", "review");
+
+        return rideDTO;
     }
 
     private Ride mapDocumentToRide(DocumentSnapshot documentSnapshot) {

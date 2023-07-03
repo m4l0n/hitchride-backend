@@ -38,8 +38,11 @@ public class NotificationController {
     @PostMapping("/send")
     public Response sendNotification(@RequestBody Map<String, String> notificationMap) throws HitchrideException {
         try {
-            notificationService.sendNotification(notificationMap.get("targetUser"), notificationMap.get("title"), notificationMap.get("body"));
-            return ResponseAPI.positiveResponse("Notification sent");
+            String sentNotification = notificationService.sendNotification(notificationMap.get("targetUser"),
+                    notificationMap.get("title"),
+                    notificationMap.get("body"),
+                    "common");
+            return ResponseAPI.positiveResponse(sentNotification);
         } catch (Exception e) {
             e.printStackTrace();
             throw new HitchrideException(e.getMessage());

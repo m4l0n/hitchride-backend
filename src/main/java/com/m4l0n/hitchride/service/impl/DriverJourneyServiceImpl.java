@@ -1,6 +1,7 @@
 package com.m4l0n.hitchride.service.impl;
 
 import com.google.cloud.firestore.*;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
 import com.m4l0n.hitchride.enums.DJStatus;
@@ -43,7 +44,13 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     private final RideService rideService;
 
 
-    public DriverJourneyServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, GoogleMapsApiClient googleMapsApiClient, DriverJourneyMapper driverJourneyMapper, SearchRideCriteriaMapper searchRideCriteriaMapper, @Lazy RideService rideService) {
+    public DriverJourneyServiceImpl(Firestore firestore,
+                                    AuthenticationService authenticationService,
+                                    UserService userService,
+                                    GoogleMapsApiClient googleMapsApiClient,
+                                    DriverJourneyMapper driverJourneyMapper,
+                                    SearchRideCriteriaMapper searchRideCriteriaMapper,
+                                    @Lazy RideService rideService) {
         this.driverJourneyRef = firestore.collection("driver_journey");
         this.authenticationService = authenticationService;
         this.userService = userService;
@@ -135,7 +142,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     @Override
-    public DriverJourneyDTO deleteDriverJourney(DriverJourneyDTO driverJourneyDTO) throws ExecutionException, InterruptedException {
+    public DriverJourneyDTO deleteDriverJourney(DriverJourneyDTO driverJourneyDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         HitchRideUser currentLoggedInUser = userService.loadUserByUsername(authenticationService.getAuthenticatedUsername());
         DriverJourney driverJourney = driverJourneyMapper.mapDtoToPojo(driverJourneyDTO);
         String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
@@ -145,6 +152,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
         executeDeleteDriverJourney(driverJourneyDTO.djId(), DJStatus.CANCELLED);
         rideService.deleteRideByDriverJourney(driverJourneyDTO.djId());
+
         return driverJourneyDTO;
     }
 

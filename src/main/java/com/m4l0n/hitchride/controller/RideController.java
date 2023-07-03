@@ -113,10 +113,34 @@ public class RideController {
         }
     }
 
+    /**
+     * Retrieve a ride by driver journey id
+     * @userType driver,passenger
+     * @param driverJourneyId
+     */
     @GetMapping("/getRideByDriverJourney")
     public Response getRideByDriverJourney(@RequestParam String driverJourneyId) {
         try {
             RideDTO ride = rideService.getRideByDriverJourney(driverJourneyId);
+            if (ride == null) {
+                return ResponseAPI.positiveResponse(null);
+            }
+            return ResponseAPI.positiveResponse(ride);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HitchrideException(e.getMessage());
+        }
+    }
+
+    /**
+     * Complete a ride (updates ride status to completed)
+     * @userType driver
+     * @param rideDTO
+     */
+    @PostMapping("/complete")
+    public Response completeRide(@RequestBody RideDTO rideDTO) {
+        try {
+            RideDTO ride = rideService.completeRide(rideDTO);
             if (ride == null) {
                 return ResponseAPI.positiveResponse(null);
             }
