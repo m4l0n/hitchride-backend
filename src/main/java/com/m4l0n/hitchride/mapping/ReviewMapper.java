@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 public class ReviewMapper implements BaseMapper<Review, ReviewDTO> {
 
     private final RideService rideService;
+    private final RideMapper rideMapper;
 
-    public ReviewMapper(RideService rideService) {
+    public ReviewMapper(RideService rideService, RideMapper rideMapper) {
         this.rideService = rideService;
+        this.rideMapper = rideMapper;
     }
 
     @SneakyThrows
@@ -23,7 +25,7 @@ public class ReviewMapper implements BaseMapper<Review, ReviewDTO> {
                pojo.getReviewDescription(),
                pojo.getReviewRating(),
                pojo.getReviewTimestamp(),
-               rideService.getRideById(pojo.getReviewRide())
+                rideMapper.mapPojoToDto(rideService.getRideById(pojo.getReviewRide()))
        );
     }
 

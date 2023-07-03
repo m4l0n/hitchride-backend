@@ -44,10 +44,10 @@ public class RideController {
      * @userType passenger
      * @param rideDTO ride to accept
      */
-    @PostMapping("/acceptRide")
-    public Response acceptRide(@RequestBody RideDTO rideDTO) {
+    @PostMapping("/bookRide")
+    public Response bookRide(@RequestBody RideDTO rideDTO) {
         try {
-            RideDTO newRide = rideService.acceptRide(rideDTO);
+            RideDTO newRide = rideService.bookRide(rideDTO);
 
             if (newRide == null) {
                 throw new HitchrideException("Ride not accepted");
@@ -98,9 +98,9 @@ public class RideController {
      * @param rideDTO ride to cancel
      */
     @PostMapping("/cancelRide")
-    public Response cancelRide(@RequestBody RideDTO rideDTO) {
+    public Response cancelRide(@RequestBody String rideId) {
         try {
-            Boolean cancelledRide = rideService.cancelRide(rideDTO);
+            Boolean cancelledRide = rideService.cancelRide(rideId);
 
             if (!cancelledRide) {
                 throw new HitchrideException("Something went wrong. Ride not cancelled. Please try again.");

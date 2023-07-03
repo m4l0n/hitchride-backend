@@ -142,18 +142,17 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     @Override
-    public DriverJourneyDTO deleteDriverJourney(DriverJourneyDTO driverJourneyDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+    public void deleteDriverJourney(String djId) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         HitchRideUser currentLoggedInUser = userService.loadUserByUsername(authenticationService.getAuthenticatedUsername());
-        DriverJourney driverJourney = driverJourneyMapper.mapDtoToPojo(driverJourneyDTO);
+        DriverJourney driverJourney = getDriverJourneyById(djId);
         String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
 
-        executeDeleteDriverJourney(driverJourneyDTO.djId(), DJStatus.CANCELLED);
-        rideService.deleteRideByDriverJourney(driverJourneyDTO.djId());
+        executeDeleteDriverJourney(djId, DJStatus.CANCELLED);
+        rideService.deleteRideByDriverJourney(djId);
 
-        return driverJourneyDTO;
     }
 
     @Override
@@ -174,14 +173,14 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     @Override
-    public DriverJourneyDTO getDriverJourneyById(String id) throws ExecutionException, InterruptedException {
+    public DriverJourney getDriverJourneyById(String id) throws ExecutionException, InterruptedException {
         DocumentSnapshot documentSnapshot = getDriverJourneyRefById(id)
                 .get()
                 .get();
         if (!documentSnapshot.exists()) {
             return null;
         }
-        return driverJourneyMapper.mapPojoToDto(mapDocumentToPojo(documentSnapshot));
+        return mapDocumentToPojo(documentSnapshot);
     }
 
     @Override

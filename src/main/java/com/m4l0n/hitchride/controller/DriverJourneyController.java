@@ -65,10 +65,10 @@ public class DriverJourneyController {
      * @userType driver
      * @param driverJourneyDTO driver journey to delete
      */
-    @PostMapping("/delete")
-    public Response deleteDriverJourney(@RequestBody DriverJourneyDTO driverJourneyDTO) {
+    @DeleteMapping("/{id}")
+    public Response deleteDriverJourney(@PathVariable("id") String djId) {
         try {
-            driverJourneyService.deleteDriverJourney(driverJourneyDTO);
+            driverJourneyService.deleteDriverJourney(djId);
 
             return ResponseAPI.emptyPositiveResponse();
         } catch (Exception e) {
