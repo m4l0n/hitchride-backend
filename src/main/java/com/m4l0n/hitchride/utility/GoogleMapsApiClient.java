@@ -37,7 +37,7 @@ public class GoogleMapsApiClient {
         throw new Exception("Failed to get address from coordinates: " + coordinates);
     }
 
-    private PlaceDetails getPlaceDetailsById(String placeId) throws Exception {
+    public PlaceDetails getPlaceDetailsById(String placeId) throws Exception {
         try {
             PlaceDetailsRequest.FieldMask[] fieldMasks = new PlaceDetailsRequest.FieldMask[]{
                     PlaceDetailsRequest.FieldMask.FORMATTED_ADDRESS,
@@ -52,10 +52,11 @@ public class GoogleMapsApiClient {
         }
     }
 
-    public CompletableFuture<Double> getDistance(GeoPoint point1, GeoPoint point2) {
+    public CompletableFuture<Double> getDistance(String point1, String point2) {
         CompletableFuture<Double> future = new CompletableFuture<>();
-        LatLng origin = new LatLng(point1.getLatitude(), point1.getLongitude());
-        LatLng destination = new LatLng(point2.getLatitude(), point2.getLongitude());
+
+        String origin = "place_id:" + point1;
+        String destination = "place_id:" + point2;
 
         DistanceMatrixApi.newRequest(geoApiContext)
                 .origins(origin)

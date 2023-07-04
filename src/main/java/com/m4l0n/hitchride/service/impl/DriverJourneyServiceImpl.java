@@ -219,7 +219,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     private DriverJourney mapDocumentToPojo(DocumentSnapshot documentSnapshot) {
         Map<String, Object> objectMap = documentSnapshot.getData();
-        Map<String, GeoPoint> geoPointMap = (Map<String, GeoPoint>) objectMap.get("djOriginDestination");
+        Map<String, String> geoPointMap = (Map<String, String>) objectMap.get("djOriginDestination");
         return new DriverJourney(
                 (String) objectMap.get("djId"),
                 ((DocumentReference) objectMap.get("djDriver")).getId(),

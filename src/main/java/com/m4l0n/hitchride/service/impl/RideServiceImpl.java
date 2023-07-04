@@ -229,7 +229,7 @@ public class RideServiceImpl implements RideService {
         Map<String, Object> documentData = documentSnapshot.getData();
         DocumentReference userRef = documentSnapshot.get("ridePassenger", DocumentReference.class);
         DocumentReference djRef = documentSnapshot.get("rideDriverJourney", DocumentReference.class);
-        Map<String, GeoPoint> geoPointMap = (Map<String, GeoPoint>) documentData.get("rideOriginDestination");
+        Map<String, String> geoPointMap = (Map<String, String>) documentData.get("rideOriginDestination");
         return new Ride(
                 (String) documentData.get("rideId"),
                 userRef.getId(),
