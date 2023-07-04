@@ -7,12 +7,13 @@ import com.m4l0n.hitchride.pojos.Ride;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public interface RideService {
 
     List<RideDTO> getRecentRides() throws ExecutionException, InterruptedException;
 
-    RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException;
+    RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException, TimeoutException;
 
     List<RideDTO> getRecentDrives() throws ExecutionException, InterruptedException;
 

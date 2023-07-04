@@ -18,6 +18,7 @@ import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.DriverJourneyValidator;
 import com.m4l0n.hitchride.utility.GoogleMapsApiClient;
+import lombok.NonNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -98,8 +99,15 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     @Override
-    public boolean acceptDriverJourney(String driverJourney) throws ExecutionException, InterruptedException {
-        executeDeleteDriverJourney(driverJourney, DJStatus.ACCEPTED);
+    public boolean acceptDriverJourney(String driverJourneyId, @NonNull Transaction transaction) throws ExecutionException, InterruptedException {
+        DocumentReference driverJourneyRef = getDriverJourneyRefById(driverJourneyId);
+        DocumentSnapshot documentSnapshot = transaction.get(driverJourneyRef).get();
+
+        if (DJStatus.valueOf((String) documentSnapshot.get("djStatus")) != DJStatus.ACTIVE) {
+            throw new HitchrideException("Driver journey is no longer available");
+        }
+
+        transaction.update(driverJourneyRef, "djStatus", DJStatus.ACCEPTED);
         return true;
     }
 
@@ -150,7 +158,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
             throw new HitchrideException(errors);
         }
 
-        executeDeleteDriverJourney(djId, DJStatus.CANCELLED);
+        updateDriverJourneyStatus(djId, DJStatus.CANCELLED);
         rideService.deleteRideByDriverJourney(djId);
 
     }
@@ -219,7 +227,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     private DriverJourney mapDocumentToPojo(DocumentSnapshot documentSnapshot) {
         Map<String, Object> objectMap = documentSnapshot.getData();
-        Map<String, GeoPoint> geoPointMap = (Map<String, GeoPoint>) objectMap.get("djOriginDestination");
+        Map<String, String> geoPointMap = (Map<String, String>) objectMap.get("djOriginDestination");
         return new DriverJourney(
                 (String) objectMap.get("djId"),
                 ((DocumentReference) objectMap.get("djDriver")).getId(),
@@ -256,7 +264,7 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
                 .toList();
     }
 
-    private void executeDeleteDriverJourney(String djId, DJStatus djStatus) throws ExecutionException, InterruptedException {
+    private void updateDriverJourneyStatus(String djId, DJStatus djStatus) throws ExecutionException, InterruptedException {
         driverJourneyRef.document(djId)
                 .update("djStatus", djStatus)
                 .get();
