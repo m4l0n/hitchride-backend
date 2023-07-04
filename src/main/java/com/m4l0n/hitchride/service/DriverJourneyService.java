@@ -1,6 +1,7 @@
 package com.m4l0n.hitchride.service;
 
 import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.Transaction;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
@@ -14,7 +15,7 @@ public interface DriverJourneyService {
 
     DriverJourneyDTO createDriverJourney(DriverJourneyDTO driverJourneyDTO) throws ExecutionException, InterruptedException;
 
-    boolean acceptDriverJourney(String driverJourney) throws ExecutionException, InterruptedException;
+    boolean acceptDriverJourney(String driverJourney, Transaction transaction) throws ExecutionException, InterruptedException;
 
     CompletableFuture<List<DriverJourneyDTO>> searchRidesFromDriverJourneys(SearchRideCriteriaDTO searchRideCriteria) throws Exception;
 

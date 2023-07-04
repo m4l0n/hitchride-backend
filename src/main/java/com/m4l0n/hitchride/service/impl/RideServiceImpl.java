@@ -4,6 +4,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.RideDTO;
+import com.m4l0n.hitchride.enums.DJStatus;
 import com.m4l0n.hitchride.enums.RideStatus;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.mapping.DriverJourneyMapper;
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 public class RideServiceImpl implements RideService {
@@ -37,9 +40,10 @@ public class RideServiceImpl implements RideService {
     private final RideValidator rideValidator;
     private final RideMapper rideMapper;
     private final DriverJourneyMapper driverJourneyMapper;
+    private final Firestore firestore;
 
 
-    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, NotificationService notificationService, RideMapper rideMapper, DriverJourneyMapper driverJourneyMapper) {
+    public RideServiceImpl(Firestore firestore, AuthenticationService authenticationService, UserService userService, @Lazy DriverJourneyService driverJourneyService, NotificationService notificationService, RideMapper rideMapper, DriverJourneyMapper driverJourneyMapper, Firestore firestore1) {
         this.rideRef = firestore.collection("rides");
         this.authenticationService = authenticationService;
         this.userService = userService;
@@ -47,6 +51,7 @@ public class RideServiceImpl implements RideService {
         this.notificationService = notificationService;
         this.rideMapper = rideMapper;
         this.driverJourneyMapper = driverJourneyMapper;
+        this.firestore = firestore;
         rideValidator = new RideValidator();
     }
 
@@ -64,7 +69,7 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException {
+    public RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException, TimeoutException {
         //Fill ride object
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
@@ -88,29 +93,42 @@ public class RideServiceImpl implements RideService {
             throw new HitchrideException(errors);
         }
 
-        //Notify driver
-        notificationService.sendNotification(driverJourney.getDjDriver(),
-                "New Ride Booking",
-                "A user has booked your ride!",
-                "common",
-                rideDTO.rideId());
+        // Use transaction to book ride and accept driver journey
+        boolean acceptedDriverJourney = firestore.runTransaction(transaction -> {
+                    // Check if driver journey is still available
+                    DocumentReference driverJourneyRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
+                    DocumentSnapshot driverJourneySnapshot = transaction.get(driverJourneyRef)
+                            .get();
+                    if (DJStatus.valueOf((String) driverJourneySnapshot.get("djStatus")) != DJStatus.ACTIVE) {
+                        throw new HitchrideException("Driver journey is no longer available");
+                    }
 
-        //Save ride in Firestore
-        DocumentReference userRef = userService.getUserDocumentReference(ride.getRidePassenger());
-        DocumentReference djRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
+                    // Book ride
+                    DocumentReference passengerRef = userService.getUserDocumentReference(ride.getRidePassenger());
+                    rideRef.document(rideId)
+                            .set(ride);
+                    rideRef.document(rideId)
+                            .update("ridePassenger",
+                                    passengerRef,
+                                    "rideDriverJourney",
+                                    driverJourneyRef);
 
-        rideRef.document(rideId)
-                .set(ride)
-                .get();
-        rideRef.document(rideId)
-                .update("ridePassenger", userRef, "rideDriverJourney", djRef)
-                .get();
+                    // Accept driver journey
+                    return driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
+                })
+                .get(5, TimeUnit.SECONDS);
 
-        boolean acceptedDriverJourney = driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney());
         if (acceptedDriverJourney) {
+            //Notify driver
+            notificationService.sendNotification(driverJourney.getDjDriver(),
+                    "New Ride Booking",
+                    "A user has booked your ride!",
+                    "common",
+                    ride.getRideId());
             return rideDTO;
         }
         return null;
+
     }
 
     @Override
