@@ -7,6 +7,7 @@ import com.m4l0n.hitchride.pojos.Reward;
 import com.m4l0n.hitchride.pojos.RewardCategory;
 import com.m4l0n.hitchride.service.RewardService;
 import com.m4l0n.hitchride.service.UserService;
+import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +21,12 @@ public class RewardServiceImpl implements RewardService {
 
     private final CollectionReference rewardsRef;
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
-    public RewardServiceImpl(Firestore firestore, UserService userService) {
+    public RewardServiceImpl(Firestore firestore, UserService userService, AuthenticationService authenticationService) {
         this.rewardsRef = firestore.collection("reward_category");
         this.userService = userService;
+        this.authenticationService = authenticationService;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class RewardServiceImpl implements RewardService {
                         .getUserPoints()) {
                     throw new HitchrideException("Not enough points to redeem this reward. ");
                 }
-                userService.updateUserPoints(reward.getRewardPointsRequired());
+                userService.updateUserPoints(authenticationService.getAuthenticatedUsername(), -reward.getRewardPointsRequired());
                 return reward;
             }
         }

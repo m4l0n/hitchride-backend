@@ -16,7 +16,7 @@ public interface UserService {
 
     HitchRideUser updateUser(HitchRideUser user) throws ExecutionException, InterruptedException, JsonProcessingException;
 
-    HitchRideUser updateUserPoints(int points) throws ExecutionException, InterruptedException;
+    HitchRideUser updateUserPoints(String userId, int points) throws ExecutionException, InterruptedException;
 
     String updateUserProfilePicture(MultipartFile imageFile) throws IOException, ExecutionException, InterruptedException;
 

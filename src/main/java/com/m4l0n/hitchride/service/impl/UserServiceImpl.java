@@ -108,11 +108,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public HitchRideUser updateUserPoints(int points) throws ExecutionException, InterruptedException {
+    public HitchRideUser updateUserPoints(String userId, int points) throws ExecutionException, InterruptedException {
         HitchRideUser findUser = loadUserByUsername(authenticationService.getAuthenticatedUsername());
         if (findUser != null) {
             ApiFuture<WriteResult> result = userRef.document(findUser.getUserId())
-                    .update("userPoints", FieldValue.increment(-points));
+                    .update("userPoints", FieldValue.increment(points));
             //Wait for the result to finish
             result.get();
             return findUser;
