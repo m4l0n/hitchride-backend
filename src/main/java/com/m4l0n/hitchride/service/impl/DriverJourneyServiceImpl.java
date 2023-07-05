@@ -167,7 +167,8 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     public List<DriverJourneyDTO> getUserDriverJourneys() throws ExecutionException, InterruptedException {
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         DocumentReference documentReference = userService.getUserDocumentReference(currentLoggedInUser);
-        QuerySnapshot queryDocumentSnapshots = driverJourneyRef.whereEqualTo("djDriver", documentReference)
+        QuerySnapshot queryDocumentSnapshots = driverJourneyRef.whereNotEqualTo("djStatus", DJStatus.CANCELLED)
+                .whereEqualTo("djDriver", documentReference)
                 .whereGreaterThanOrEqualTo("djTimestamp", System.currentTimeMillis())
                 .get()
                 .get();
