@@ -139,7 +139,7 @@ public class RideServiceImpl implements RideService {
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getDriverJourneyRefsByDriverUserId(currentLoggedInUser);
 
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
-                .whereEqualTo("rideStatus", RideStatus.COMPLETED)
+                .whereEqualTo("rideStatus", RideStatus.COMPLETED.toString())
                 .whereIn("rideDriverJourney", driverJourneyRefs)
                 .limit(5)
                 .get();
