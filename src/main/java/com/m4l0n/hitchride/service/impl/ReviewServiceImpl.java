@@ -10,7 +10,6 @@ import com.m4l0n.hitchride.service.ReviewService;
 import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
-import com.m4l0n.hitchride.service.validations.ReviewValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.stream.Stream;
 public class ReviewServiceImpl implements ReviewService {
 
     private final CollectionReference reviewRef;
-    private final ReviewValidator reviewValidator;
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final ReviewMapper reviewMapper;
@@ -34,7 +32,6 @@ public class ReviewServiceImpl implements ReviewService {
         this.userService = userService;
         this.reviewMapper = reviewMapper;
         this.rideService = rideService;
-        this.reviewValidator = new ReviewValidator(reviewRef);
     }
 
     @Override

@@ -63,6 +63,7 @@ public class RideServiceImpl implements RideService {
 
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
                 .whereEqualTo("ridePassenger", userRef)
+                .whereEqualTo("rideStatus", RideStatus.COMPLETED.toString())
                 .limit(5)
                 .get();
         return getRideDTOS(querySnapshot);
