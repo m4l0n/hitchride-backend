@@ -10,7 +10,6 @@ import com.m4l0n.hitchride.service.ReviewService;
 import com.m4l0n.hitchride.service.RideService;
 import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
-import com.m4l0n.hitchride.service.validations.ReviewValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +21,6 @@ import java.util.stream.Stream;
 public class ReviewServiceImpl implements ReviewService {
 
     private final CollectionReference reviewRef;
-    private final ReviewValidator reviewValidator;
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final ReviewMapper reviewMapper;
@@ -34,7 +32,6 @@ public class ReviewServiceImpl implements ReviewService {
         this.userService = userService;
         this.reviewMapper = reviewMapper;
         this.rideService = rideService;
-        this.reviewValidator = new ReviewValidator(reviewRef);
     }
 
     @Override
@@ -76,15 +73,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewDTO createReview(ReviewDTO reviewDTO) throws ExecutionException, InterruptedException {
         Review review = reviewMapper.mapDtoToPojo(reviewDTO);
-        String errors = reviewValidator.validateCreateReview(review);
-        if (!errors.isEmpty()) {
-            throw new HitchrideException(errors);
+
+        DocumentReference documentReference = rideService.getRideReferenceById(review.getReviewRide());
+
+        QuerySnapshot querySnapshot = reviewRef.whereEqualTo("reviewRide", documentReference)
+                .get()
+                .get();
+        if (!querySnapshot.isEmpty()) {
+            throw new HitchrideException("Review already exists for this ride");
         }
+
         String docId = reviewRef.document()
                 .getId();
         review.setReviewId(docId);
-
-        DocumentReference documentReference = rideService.getRideReferenceById(review.getReviewRide());
 
         reviewRef.document(docId)
                 .set(review)
