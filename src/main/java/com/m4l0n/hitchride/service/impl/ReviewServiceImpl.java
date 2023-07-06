@@ -76,15 +76,19 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewDTO createReview(ReviewDTO reviewDTO) throws ExecutionException, InterruptedException {
         Review review = reviewMapper.mapDtoToPojo(reviewDTO);
-        String errors = reviewValidator.validateCreateReview(review);
-        if (!errors.isEmpty()) {
-            throw new HitchrideException(errors);
+
+        DocumentReference documentReference = rideService.getRideReferenceById(review.getReviewRide());
+
+        QuerySnapshot querySnapshot = reviewRef.whereEqualTo("reviewRide", documentReference)
+                .get()
+                .get();
+        if (!querySnapshot.isEmpty()) {
+            throw new HitchrideException("Review already exists for this ride");
         }
+
         String docId = reviewRef.document()
                 .getId();
         review.setReviewId(docId);
-
-        DocumentReference documentReference = rideService.getRideReferenceById(review.getReviewRide());
 
         reviewRef.document(docId)
                 .set(review)
