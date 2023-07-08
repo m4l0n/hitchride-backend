@@ -73,6 +73,8 @@ public class UserServiceImpl implements UserService {
         if (findUser == null) {
             DriverInfo newDriverInfo = new DriverInfo();
             newDriverInfo.setDiDateJoinedTimestamp(System.currentTimeMillis());
+            newDriverInfo.setDiRating(0);
+            newDriverInfo.setDiNumberOfRatings(0);
             user.setUserDriverInfo(newDriverInfo);
             ApiFuture<WriteResult> result = userRef.document(user.getUserId())
                     .set(user);
@@ -234,7 +236,10 @@ public class UserServiceImpl implements UserService {
         String diCarColor = (String) data.get("diCarColor");
         String diCarLicensePlate = (String) data.get("diCarLicensePlate");
         Long diDateJoinedTimestamp = ((Number) data.get("diDateJoinedTimestamp")).longValue();
-        Long diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBoughtTimestamp")).longValue();
+        Long diDateCarBoughtTimestamp = 0L;
+        if (data.get("diDateCarBoughtTimestamp") != null) {
+            diDateCarBoughtTimestamp = ((Number) data.get("diDateCarBoughtTimestamp")).longValue();
+        }
         Boolean diIsCarSecondHand = (Boolean) data.get("diIsCarSecondHand");
         Integer diRating = ((Number) data.get("diRating")).intValue();
         Integer diNumberOfRatings = ((Number) data.get("diNumberOfRatings")).intValue();
