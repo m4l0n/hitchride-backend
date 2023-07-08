@@ -3,6 +3,8 @@ package com.m4l0n.hitchride.service.impl;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.enums.DJStatus;
 import com.m4l0n.hitchride.enums.RideStatus;
@@ -105,15 +107,21 @@ public class RideServiceImpl implements RideService {
                         throw new HitchrideException("Driver journey is no longer available");
                     }
 
-                    // Book ride
+                    Gson gson = new Gson();
+                    Map<String, Object> rideMap = gson.fromJson(gson.toJson(ride), new TypeToken<>() {
+                    }.getType());
                     DocumentReference passengerRef = userService.getUserDocumentReference(ride.getRidePassenger());
+                    rideMap.put("ridePassenger", passengerRef);
+                    rideMap.put("rideDriverJourney", driverJourneyRef);
+
+                    // Book ride
                     rideRef.document(rideId)
-                            .set(ride);
-                    rideRef.document(rideId)
-                            .update("ridePassenger",
-                                    passengerRef,
-                                    "rideDriverJourney",
-                                    driverJourneyRef);
+                            .set(rideMap);
+//                    rideRef.document(rideId)
+//                            .update("ridePassenger",
+//                                    passengerRef,
+//                                    "rideDriverJourney",
+//                                    driverJourneyRef);
 
                     // Accept driver journey
                     return driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
