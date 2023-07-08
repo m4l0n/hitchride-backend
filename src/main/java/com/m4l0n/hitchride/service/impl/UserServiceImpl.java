@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -72,9 +71,9 @@ public class UserServiceImpl implements UserService {
         //Checks first if the user exists
         HitchRideUser findUser = loadUserByUsername(user.getUserId());
         if (findUser == null) {
-            DriverInfo userDriverInfo = user.getUserDriverInfo();
-            userDriverInfo.setDiDateJoinedTimestamp(Timestamp.now()
-                    .getSeconds());
+            DriverInfo newDriverInfo = new DriverInfo();
+            newDriverInfo.setDiDateJoinedTimestamp(System.currentTimeMillis());
+            user.setUserDriverInfo(newDriverInfo);
             ApiFuture<WriteResult> result = userRef.document(user.getUserId())
                     .set(user);
             //Wait for the result to finish
