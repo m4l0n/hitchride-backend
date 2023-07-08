@@ -30,4 +30,8 @@ public interface RideService {
     RideDTO getRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException;
 
     RideDTO completeRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException;
+
+    List<DocumentReference> getRideRefsByDriver(String driverId) throws ExecutionException, InterruptedException;
+
+    List<DocumentReference> getRideRefsByPassenger(String passengerId) throws ExecutionException, InterruptedException;
 }

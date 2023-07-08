@@ -22,7 +22,8 @@ public class DriverInfoValidator {
         if (userDriverInfo.getDiDateCarBoughtTimestamp() < LocalDate.of(1900, 1, 1).toEpochDay()) {
             error.append("Car bought date cannot be before 1900. ");
         }
-        if (System.currentTimeMillis() - userDriverInfo.getDiDateCarBoughtTimestamp() > 18 * 365 * 24 * 60 * 60) {
+
+        if (System.currentTimeMillis() - userDriverInfo.getDiDateCarBoughtTimestamp() > 18 * 31556952000L) {
             error.append("Car age cannot be more than 18 years. ");
         }
      }
