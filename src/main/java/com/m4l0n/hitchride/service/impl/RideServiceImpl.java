@@ -186,6 +186,8 @@ public class RideServiceImpl implements RideService {
         DocumentSnapshot documentSnapshot = rideRef.document(ride.getRideId())
                 .get()
                 .get();
+        // Restore driver journey status back to active
+        driverJourneyService.restoreDriverJourney(ride.getRideDriverJourney());
 
         notificationService.sendNotification(driverJourney.getDjDriver(),
                 "Ride Cancelled",

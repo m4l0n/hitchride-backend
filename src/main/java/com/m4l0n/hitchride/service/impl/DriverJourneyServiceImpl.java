@@ -228,6 +228,11 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
                 .toList();
     }
 
+    @Override
+    public void restoreDriverJourney(String djId) throws ExecutionException, InterruptedException {
+        updateDriverJourneyStatus(djId, DJStatus.ACTIVE);
+    }
+
     private DriverJourney mapDocumentToPojo(DocumentSnapshot documentSnapshot) {
         Map<String, Object> objectMap = documentSnapshot.getData();
         Map<String, String> geoPointMap = (Map<String, String>) objectMap.get("djOriginDestination");

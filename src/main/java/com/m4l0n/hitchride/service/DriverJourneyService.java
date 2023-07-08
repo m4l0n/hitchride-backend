@@ -30,4 +30,6 @@ public interface DriverJourneyService {
     List<DocumentReference> getDriverJourneyRefsByDriverUserId(String userId) throws ExecutionException, InterruptedException;
 
     List<DocumentReference> getFutureDriverJourneyRefs() throws ExecutionException, InterruptedException;
+
+    void restoreDriverJourney(String djId) throws ExecutionException, InterruptedException;
 }
