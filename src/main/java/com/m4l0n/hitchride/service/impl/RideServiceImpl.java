@@ -23,6 +23,7 @@ import lombok.NonNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -245,6 +246,36 @@ public class RideServiceImpl implements RideService {
         userService.updateUserPoints(rideDTO.ridePassenger().getUserId(), 50);
 
         return rideDTO;
+    }
+
+    @Override
+    public List<DocumentReference> getRideRefsByDriver(String driverId) throws ExecutionException, InterruptedException {
+        List<DocumentReference> driverJourneyRefs = driverJourneyService.getDriverJourneyRefsByDriverUserId(driverId);
+        if (driverJourneyRefs.isEmpty()) {
+            return new ArrayList<>();
+        }
+        QuerySnapshot querySnapshot = rideRef
+                .whereIn("rideDriverJourney", driverJourneyRefs)
+                .get().get();
+
+        return querySnapshot.getDocuments()
+                .stream()
+                .map(DocumentSnapshot::getReference)
+                .toList();
+    }
+
+    @Override
+    public List<DocumentReference> getRideRefsByPassenger(String passengerId) throws ExecutionException, InterruptedException {
+        DocumentReference userRef = userService.getUserDocumentReference(passengerId);
+
+        QuerySnapshot querySnapshot = rideRef
+                .whereEqualTo("ridePassenger", userRef)
+                .get().get();
+
+        return querySnapshot.getDocuments()
+                .stream()
+                .map(DocumentSnapshot::getReference)
+                .toList();
     }
 
     private Ride mapDocumentToRide(DocumentSnapshot documentSnapshot) {
