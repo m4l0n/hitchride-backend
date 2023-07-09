@@ -3,6 +3,7 @@ package com.m4l0n.hitchride.service.impl;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
+import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;
 import com.m4l0n.hitchride.enums.DJStatus;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
@@ -153,6 +154,12 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     public void deleteDriverJourney(String djId) throws ExecutionException, InterruptedException, FirebaseMessagingException {
         HitchRideUser currentLoggedInUser = userService.loadUserByUsername(authenticationService.getAuthenticatedUsername());
         DriverJourney driverJourney = getDriverJourneyById(djId);
+
+        RideDTO rideDTO = rideService.getRideByDriverJourney(djId);
+        if (rideDTO != null) {
+            throw new HitchrideException("Cannot delete driver journey with active booking.");
+        }
+
         String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
