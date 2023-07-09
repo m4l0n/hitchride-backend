@@ -12,6 +12,7 @@ public class DriverJourneyValidator {
         this.validateDriverJourneyLocation(errors, driverJourney.getDjOriginDestination()
                 .getOrigin(), driverJourney.getDjOriginDestination()
                 .getDestination());
+        this.validateDriverJourneyCreateTime(errors, driverJourney.getDjTimestamp());
         this.validateDriverJourneyPrice(errors, driverJourney.getDjPrice());
         this.validateDriverInfoExists(errors, currentLoggedInUser);
 
@@ -25,6 +26,12 @@ public class DriverJourneyValidator {
         return errors.toString();
     }
 
+    private void validateDriverJourneyCreateTime(StringBuilder errors, Long djTimestamp) {
+        long fiveMinutesInMillis = 60 * 5 * 1000L;
+        if (djTimestamp < System.currentTimeMillis() + fiveMinutesInMillis)
+            errors.append("Driver journey must be created at least 5 minutes before ride. ");
+    }
+
     private void validateDriverJourneyLocation(StringBuilder errors, String driverJourneyOrigin, String driverJourneyDestination) {
         if (driverJourneyOrigin.equals(driverJourneyDestination))
             errors.append("Origin and destination cannot be the same. ");
@@ -33,7 +40,7 @@ public class DriverJourneyValidator {
     private void validateDeleteTime(StringBuilder errors, Long djTimestamp) {
         long tenMinutesInMillis = 60 * 10 * 1000L;
         if (djTimestamp < System.currentTimeMillis() + tenMinutesInMillis)
-            errors.append("Driver journey must be deleted within 10 minutes of ride. ");
+            errors.append("Driver journey cannot be deleted within 10 minutes of ride.");
     }
 
     private void validateDriverJourneyPrice(StringBuilder errors, String djPrice) {
