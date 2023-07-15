@@ -22,6 +22,7 @@ import com.m4l0n.hitchride.service.UserService;
 import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.RideValidator;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Service
+@Slf4j
 public class RideServiceImpl implements RideService {
 
     private final CollectionReference rideRef;
@@ -74,7 +76,7 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException, TimeoutException {
-        //Fill ride object
+        //Populate ride object
         String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
         HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
         DriverJourney driverJourney = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
@@ -98,13 +100,15 @@ public class RideServiceImpl implements RideService {
         }
 
         // Use transaction to book ride and accept driver journey
+        log.info("Starting transaction for booking ride: {}", rideDTO.rideId());
         boolean acceptedDriverJourney = firestore.runTransaction(transaction -> {
                     // Check if driver journey is still available
                     DocumentReference driverJourneyRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
                     DocumentSnapshot driverJourneySnapshot = transaction.get(driverJourneyRef)
                             .get();
                     if (DJStatus.valueOf((String) driverJourneySnapshot.get("djStatus")) != DJStatus.ACTIVE) {
-                        throw new HitchrideException("Driver journey is no longer available");
+                        log.error("Driver journey is no longer available for ID: {}", ride.getRideDriverJourney());
+                        throw new HitchrideException("Driver journey is no longer available. ");
                     }
 
                     Gson gson = new Gson();
@@ -117,11 +121,6 @@ public class RideServiceImpl implements RideService {
                     // Book ride
                     rideRef.document(rideId)
                             .set(rideMap);
-//                    rideRef.document(rideId)
-//                            .update("ridePassenger",
-//                                    passengerRef,
-//                                    "rideDriverJourney",
-//                                    driverJourneyRef);
 
                     // Accept driver journey
                     return driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);

@@ -20,6 +20,7 @@ import com.m4l0n.hitchride.service.shared.AuthenticationService;
 import com.m4l0n.hitchride.service.validations.DriverJourneyValidator;
 import com.m4l0n.hitchride.utility.GoogleMapsApiClient;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     private final CollectionReference driverJourneyRef;
@@ -101,10 +103,13 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     public boolean acceptDriverJourney(String driverJourneyId, @NonNull Transaction transaction) throws ExecutionException, InterruptedException {
+        log.info("Attempting to accept driver journey: {}", driverJourneyId);
         DocumentReference driverJourneyRef = getDriverJourneyRefById(driverJourneyId);
-        DocumentSnapshot documentSnapshot = transaction.get(driverJourneyRef).get();
+        DocumentSnapshot documentSnapshot = transaction.get(driverJourneyRef)
+                .get();
 
         if (DJStatus.valueOf((String) documentSnapshot.get("djStatus")) != DJStatus.ACTIVE) {
+            log.error("Driver journey is no longer available for ID: {}", driverJourneyId);
             throw new HitchrideException("Driver journey is no longer available");
         }
 
@@ -160,10 +165,10 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
             throw new HitchrideException("Cannot delete driver journey with active booking.");
         }
 
-        String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
-        if (!errors.isEmpty()) {
-            throw new HitchrideException(errors);
-        }
+//        String errors = driverJourneyValidator.validateDeleteDriverJourney(driverJourney, currentLoggedInUser);
+//        if (!errors.isEmpty()) {
+//            throw new HitchrideException(errors);
+//        }
 
         updateDriverJourneyStatus(djId, DJStatus.CANCELLED);
         rideService.deleteRideByDriverJourney(djId);
