@@ -15,7 +15,7 @@ public interface DriverJourneyService {
 
     DriverJourneyDTO createDriverJourney(DriverJourneyDTO driverJourneyDTO) throws ExecutionException, InterruptedException;
 
-    boolean acceptDriverJourney(String driverJourney, Transaction transaction) throws ExecutionException, InterruptedException;
+    void acceptDriverJourney(String driverJourney, Transaction transaction);
 
     CompletableFuture<List<DriverJourneyDTO>> searchRidesFromDriverJourneys(SearchRideCriteriaDTO searchRideCriteria) throws Exception;
 

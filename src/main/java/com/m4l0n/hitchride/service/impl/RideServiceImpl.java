@@ -26,9 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -38,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 public class RideServiceImpl implements RideService {
 
     private final CollectionReference rideRef;
+    private final CollectionReference lockRef;
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final DriverJourneyService driverJourneyService;
@@ -58,6 +57,7 @@ public class RideServiceImpl implements RideService {
         this.driverJourneyMapper = driverJourneyMapper;
         this.firestore = firestore;
         rideValidator = new RideValidator();
+        lockRef = firestore.collection("locks");
     }
 
     @Override
@@ -76,68 +76,26 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public RideDTO bookRide(RideDTO rideDTO) throws ExecutionException, InterruptedException, FirebaseMessagingException, TimeoutException {
-        //Populate ride object
-        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
-        HitchRideUser passenger = userService.loadUserByUsername(currentLoggedInUser);
-        DriverJourney driverJourney = driverJourneyService.getDriverJourneyById(rideDTO.rideDriverJourney()
-                .djId());
-        String rideId = rideRef.document()
-                .getId();
-        RideDTO tempDTO = new RideDTO(
-                rideId,
-                passenger,
-                rideDTO.rideOriginDestination(),
-                driverJourneyMapper.mapPojoToDto(driverJourney)
-        );
-        Ride ride = rideMapper.mapDtoToPojo(tempDTO);
-        ride.setRideId(rideId);
-        ride.setRidePassenger(currentLoggedInUser);
-        ride.setRideStatus(RideStatus.ACTIVE);
+        HitchRideUser passenger = getPassengerDetails();
+        Ride ride = populateDTOAndCreateRide(rideDTO, passenger);
+        String driverUserId = driverJourneyService.getDriverJourneyById(ride.getRideDriverJourney())
+                .getDjDriver();
+        String errors = rideValidator.validateCreateRide(passenger.getUserId(),
+                ride,
+                driverUserId);
 
-        String errors = rideValidator.validateCreateRide(currentLoggedInUser, ride, driverJourney.getDjDriver());
         if (!errors.isEmpty()) {
             throw new HitchrideException(errors);
         }
 
-        // Use transaction to book ride and accept driver journey
-        log.info("Starting transaction for booking ride: {}", rideDTO.rideId());
-        boolean acceptedDriverJourney = firestore.runTransaction(transaction -> {
-                    // Check if driver journey is still available
-                    DocumentReference driverJourneyRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
-                    DocumentSnapshot driverJourneySnapshot = transaction.get(driverJourneyRef)
-                            .get();
-                    if (DJStatus.valueOf((String) driverJourneySnapshot.get("djStatus")) != DJStatus.ACTIVE) {
-                        log.error("Driver journey is no longer available for ID: {}", ride.getRideDriverJourney());
-                        throw new HitchrideException("Driver journey is no longer available. ");
-                    }
-
-                    Gson gson = new Gson();
-                    Map<String, Object> rideMap = gson.fromJson(gson.toJson(ride), new TypeToken<>() {
-                    }.getType());
-                    DocumentReference passengerRef = userService.getUserDocumentReference(ride.getRidePassenger());
-                    rideMap.put("ridePassenger", passengerRef);
-                    rideMap.put("rideDriverJourney", driverJourneyRef);
-
-                    // Book ride
-                    rideRef.document(rideId)
-                            .set(rideMap);
-
-                    // Accept driver journey
-                    return driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
-                })
-                .get(5, TimeUnit.SECONDS);
+        boolean acceptedDriverJourney = bookRideAndAcceptDriverJourney(ride);
 
         if (acceptedDriverJourney) {
-            //Notify driver
-            notificationService.sendNotification(driverJourney.getDjDriver(),
-                    "New Ride Booking",
-                    "A user has booked your ride!",
-                    "common",
-                    ride.getRideId());
+            notifyDriver(driverUserId, ride.getRideId());
             return rideDTO;
+        } else {
+            throw new HitchrideException("Driver journey is no longer available");
         }
-        return null;
-
     }
 
     @Override
@@ -252,7 +210,8 @@ public class RideServiceImpl implements RideService {
                 .getUserId(), "Ride Completed", "Your ride has been completed!", "review");
 
         //award users 50 points for completing a ride
-        userService.updateUserPoints(rideDTO.ridePassenger().getUserId(), 50);
+        userService.updateUserPoints(rideDTO.ridePassenger()
+                .getUserId(), 50);
 
         return rideDTO;
     }
@@ -265,7 +224,8 @@ public class RideServiceImpl implements RideService {
         }
         QuerySnapshot querySnapshot = rideRef
                 .whereIn("rideDriverJourney", driverJourneyRefs)
-                .get().get();
+                .get()
+                .get();
 
         return querySnapshot.getDocuments()
                 .stream()
@@ -279,12 +239,100 @@ public class RideServiceImpl implements RideService {
 
         QuerySnapshot querySnapshot = rideRef
                 .whereEqualTo("ridePassenger", userRef)
-                .get().get();
+                .get()
+                .get();
 
         return querySnapshot.getDocuments()
                 .stream()
                 .map(DocumentSnapshot::getReference)
                 .toList();
+    }
+
+    private HitchRideUser getPassengerDetails() throws ExecutionException, InterruptedException {
+        String currentLoggedInUser = authenticationService.getAuthenticatedUsername();
+        return userService.loadUserByUsername(currentLoggedInUser);
+    }
+
+    private Ride populateDTOAndCreateRide(RideDTO rideDTO, HitchRideUser passenger) {
+        String rideId = rideRef.document()
+                .getId();
+
+        RideDTO tempDTO = new RideDTO(
+                rideId,
+                passenger,
+                rideDTO.rideOriginDestination(),
+                null
+        );
+        Ride ride = rideMapper.mapDtoToPojo(tempDTO);
+        ride.setRideDriverJourney(rideDTO.rideDriverJourney()
+                .djId());
+        ride.setRidePassenger(passenger.getUserId());
+        ride.setRideStatus(RideStatus.ACTIVE);
+        return ride;
+    }
+
+    private boolean bookRideAndAcceptDriverJourney(Ride ride) throws InterruptedException, ExecutionException, TimeoutException {
+        String lockId = UUID.randomUUID()
+                .toString();
+        lockRef
+                .document(lockId)
+                .set(new HashMap<>(), SetOptions.merge());
+
+        boolean acceptedDriverJourney = handleTransaction(ride, lockId);
+
+        lockRef
+                .document(lockId)
+                .delete();
+
+        return acceptedDriverJourney;
+    }
+
+    private boolean handleTransaction(Ride ride, String lockId) throws InterruptedException, ExecutionException, TimeoutException {
+        log.info("Starting transaction for booking ride: {}", ride.getRideId());
+        return firestore.runTransaction(transaction -> {
+                    // Get lock document and check if it exists
+                    DocumentSnapshot lockSnapshot = transaction.get(lockRef
+                                    .document(lockId))
+                            .get();
+                    if (!lockSnapshot.exists()) {
+                        return false;
+                    }
+
+                    // Check if driver journey is still available
+                    DocumentReference driverJourneyRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
+                    DocumentSnapshot driverJourneySnapshot = transaction.get(driverJourneyRef)
+                            .get();
+
+                    // Check if driver journey is still available
+                    if (DJStatus.valueOf((String) driverJourneySnapshot.get("djStatus")) != DJStatus.ACTIVE) {
+                        log.error("Driver journey is no longer available for ID: {}", ride.getRideDriverJourney());
+                        return false;
+                    }
+
+                    // If still available, update driver journey status
+                    driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
+
+                    // Convert ride object to map and save it to Firestore
+                    Gson gson = new Gson();
+                    Map<String, Object> rideMap = gson.fromJson(gson.toJson(ride), new TypeToken<>() {
+                    }.getType());
+                    DocumentReference passengerRef = userService.getUserDocumentReference(ride.getRidePassenger());
+                    rideMap.put("ridePassenger", passengerRef);
+                    rideMap.put("rideDriverJourney", driverJourneyRef);
+                    rideRef.document(ride.getRideId())
+                            .set(rideMap);
+
+                    return true;
+                })
+                .get(5, TimeUnit.SECONDS);
+    }
+
+    private void notifyDriver(String driverId, String rideId) throws FirebaseMessagingException, ExecutionException, InterruptedException {
+        notificationService.sendNotification(driverId,
+                "New Ride Booking",
+                "A user has booked your ride!",
+                "common",
+                rideId);
     }
 
     private Ride mapDocumentToRide(DocumentSnapshot documentSnapshot) {
