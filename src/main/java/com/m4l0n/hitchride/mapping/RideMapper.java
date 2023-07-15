@@ -35,6 +35,15 @@ public class RideMapper implements BaseMapper<Ride, RideDTO> {
 
     @Override
     public Ride mapDtoToPojo(RideDTO dto) {
+        if (dto.rideDriverJourney() == null) {
+            return new Ride(
+                    dto.rideId(),
+                    dto.ridePassenger()
+                            .getUserId(),
+                    originDestinationMapper.mapDtoToPojo(dto.rideOriginDestination()),
+                    null
+            );
+        }
         return new Ride(
                 dto.rideId(),
                 dto.ridePassenger()
