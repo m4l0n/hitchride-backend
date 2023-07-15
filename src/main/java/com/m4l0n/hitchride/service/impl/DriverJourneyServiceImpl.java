@@ -102,19 +102,9 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     }
 
     @Override
-    public boolean acceptDriverJourney(String driverJourneyId, @NonNull Transaction transaction) throws ExecutionException, InterruptedException {
-        log.info("Attempting to accept driver journey: {}", driverJourneyId);
+    public void acceptDriverJourney(String driverJourneyId, @NonNull Transaction transaction) {
         DocumentReference driverJourneyRef = getDriverJourneyRefById(driverJourneyId);
-        DocumentSnapshot documentSnapshot = transaction.get(driverJourneyRef)
-                .get();
-
-        if (DJStatus.valueOf((String) documentSnapshot.get("djStatus")) != DJStatus.ACTIVE) {
-            log.error("Driver journey is no longer available for ID: {}", driverJourneyId);
-            throw new HitchrideException("Driver journey is no longer available");
-        }
-
         transaction.update(driverJourneyRef, "djStatus", DJStatus.ACCEPTED);
-        return true;
     }
 
     @Override

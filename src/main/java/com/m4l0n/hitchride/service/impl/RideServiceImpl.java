@@ -26,9 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -38,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 public class RideServiceImpl implements RideService {
 
     private final CollectionReference rideRef;
+    private final CollectionReference lockRef;
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final DriverJourneyService driverJourneyService;
@@ -58,6 +57,7 @@ public class RideServiceImpl implements RideService {
         this.driverJourneyMapper = driverJourneyMapper;
         this.firestore = firestore;
         rideValidator = new RideValidator();
+        lockRef = firestore.collection("locks");
     }
 
     @Override
@@ -99,34 +99,58 @@ public class RideServiceImpl implements RideService {
             throw new HitchrideException(errors);
         }
 
+        // Create a lock to ensure mutual exclusion
+        String lockId = UUID.randomUUID()
+                .toString();
+        firestore.collection("locks")
+                .document(lockId)
+                .set(new HashMap<>(), SetOptions.merge());
+
         // Use transaction to book ride and accept driver journey
-        log.info("Starting transaction for booking ride: {}", rideDTO.rideId());
+        log.info("Starting transaction for booking ride: {}", ride.getRideId());
         boolean acceptedDriverJourney = firestore.runTransaction(transaction -> {
+                    // Get lock document and check if it exists
+                    DocumentSnapshot lockSnapshot = transaction.get(firestore.collection("locks")
+                                    .document(lockId))
+                            .get();
+                    if (!lockSnapshot.exists()) {
+                        return false;
+                    }
+
                     // Check if driver journey is still available
                     DocumentReference driverJourneyRef = driverJourneyService.getDriverJourneyRefById(ride.getRideDriverJourney());
                     DocumentSnapshot driverJourneySnapshot = transaction.get(driverJourneyRef)
                             .get();
+
+                    // Check if driver journey is still available
                     if (DJStatus.valueOf((String) driverJourneySnapshot.get("djStatus")) != DJStatus.ACTIVE) {
                         log.error("Driver journey is no longer available for ID: {}", ride.getRideDriverJourney());
-                        throw new HitchrideException("Driver journey is no longer available. ");
+                        return false;
                     }
 
+                    // If still available, update driver journey status
+                    driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
+
+                    // Convert ride object to map and save it to Firestore
                     Gson gson = new Gson();
                     Map<String, Object> rideMap = gson.fromJson(gson.toJson(ride), new TypeToken<>() {
                     }.getType());
                     DocumentReference passengerRef = userService.getUserDocumentReference(ride.getRidePassenger());
                     rideMap.put("ridePassenger", passengerRef);
                     rideMap.put("rideDriverJourney", driverJourneyRef);
-
-                    // Book ride
                     rideRef.document(rideId)
                             .set(rideMap);
 
-                    // Accept driver journey
-                    return driverJourneyService.acceptDriverJourney(ride.getRideDriverJourney(), transaction);
+                    return true;
                 })
                 .get(5, TimeUnit.SECONDS);
 
+        // Delete lock document after transaction
+        firestore.collection("locks")
+                .document(lockId)
+                .delete();
+
+        // Check if driver journey was accepted and notify driver, or throw an exception
         if (acceptedDriverJourney) {
             //Notify driver
             notificationService.sendNotification(driverJourney.getDjDriver(),
@@ -135,8 +159,9 @@ public class RideServiceImpl implements RideService {
                     "common",
                     ride.getRideId());
             return rideDTO;
+        } else {
+            throw new HitchrideException("Driver journey is no longer available");
         }
-        return null;
 
     }
 
@@ -252,7 +277,8 @@ public class RideServiceImpl implements RideService {
                 .getUserId(), "Ride Completed", "Your ride has been completed!", "review");
 
         //award users 50 points for completing a ride
-        userService.updateUserPoints(rideDTO.ridePassenger().getUserId(), 50);
+        userService.updateUserPoints(rideDTO.ridePassenger()
+                .getUserId(), 50);
 
         return rideDTO;
     }
@@ -265,7 +291,8 @@ public class RideServiceImpl implements RideService {
         }
         QuerySnapshot querySnapshot = rideRef
                 .whereIn("rideDriverJourney", driverJourneyRefs)
-                .get().get();
+                .get()
+                .get();
 
         return querySnapshot.getDocuments()
                 .stream()
@@ -279,7 +306,8 @@ public class RideServiceImpl implements RideService {
 
         QuerySnapshot querySnapshot = rideRef
                 .whereEqualTo("ridePassenger", userRef)
-                .get().get();
+                .get()
+                .get();
 
         return querySnapshot.getDocuments()
                 .stream()
