@@ -64,7 +64,8 @@ public class GoogleMapsApiClient {
                 .setCallback(new PendingResult.Callback<>() {
                     @Override
                     public void onResult(DistanceMatrix result) {
-                        if (result.rows.length > 0 && result.rows[0].elements.length > 0 && result.rows[0].elements[0].status == DistanceMatrixElementStatus.OK) {
+                        if (result.rows.length > 0 && result.rows[0].elements.length > 0 &&
+                                result.rows[0].elements[0].status == DistanceMatrixElementStatus.OK) {
                             future.complete(result.rows[0].elements[0].distance.inMeters / 1000.0); // Convert meters to kilometers
                         } else {
                             future.completeExceptionally(new Exception("Failed to calculate distance"));

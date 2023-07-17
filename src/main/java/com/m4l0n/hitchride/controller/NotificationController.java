@@ -41,7 +41,8 @@ public class NotificationController {
             String sentNotification = notificationService.sendNotification(notificationMap.get("targetUser"),
                     notificationMap.get("title"),
                     notificationMap.get("body"),
-                    "common");
+                    notificationMap.get("type"),
+                    notificationMap.get("payload"));
             return ResponseAPI.positiveResponse(sentNotification);
         } catch (Exception e) {
             e.printStackTrace();

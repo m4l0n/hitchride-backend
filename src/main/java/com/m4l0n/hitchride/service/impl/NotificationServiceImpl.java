@@ -35,7 +35,11 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public String sendNotification(String targetUser, String title, String body, String type, String... payload) throws InterruptedException, ExecutionException, FirebaseMessagingException {
+    public String sendNotification(String targetUser,
+                                   String title,
+                                   String body,
+                                   String type,
+                                   String... payload) throws InterruptedException, ExecutionException, FirebaseMessagingException {
         String fcmToken = findFcmTokenByUserId(targetUser);
         Notification notification = Notification.builder()
                 .setTitle(title)

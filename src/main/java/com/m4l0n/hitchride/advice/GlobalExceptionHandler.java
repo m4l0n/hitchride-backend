@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.advice;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: GlobalExceptionHandler.java
+// Description: Handles Exceptions thrown to return a response in Controllers
+// Last Modified: 13 July 2023
+
 import com.m4l0n.hitchride.response.NegativeResponse;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.response.StatusCode;

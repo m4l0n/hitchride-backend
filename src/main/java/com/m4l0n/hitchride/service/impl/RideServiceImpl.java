@@ -272,6 +272,7 @@ public class RideServiceImpl implements RideService {
     }
 
     private boolean bookRideAndAcceptDriverJourney(Ride ride) throws InterruptedException, ExecutionException, TimeoutException {
+        // Create a lock to ensure mutual exclusion
         String lockId = UUID.randomUUID()
                 .toString();
         lockRef
@@ -289,6 +290,7 @@ public class RideServiceImpl implements RideService {
 
     private boolean handleTransaction(Ride ride, String lockId) throws InterruptedException, ExecutionException, TimeoutException {
         log.info("Starting transaction for booking ride: {}", ride.getRideId());
+        // Start a transaction to book the ride and accept the driver journey
         return firestore.runTransaction(transaction -> {
                     // Get lock document and check if it exists
                     DocumentSnapshot lockSnapshot = transaction.get(lockRef
