@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: RideServiceImpl.java
+// Description: Implementation of RideService interface, that handles the CRUD operations for Ride
+// Last Modified: 22 July 2023
+
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -166,7 +171,7 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException {
+    public DocumentReference getRideReferenceById(String rideId) {
         return rideRef.document(rideId);
     }
 
@@ -211,6 +216,8 @@ public class RideServiceImpl implements RideService {
 
         //award users 50 points for completing a ride
         userService.updateUserPoints(rideDTO.ridePassenger()
+                .getUserId(), 50);
+        userService.updateUserPoints(rideDTO.rideDriverJourney().djDriver()
                 .getUserId(), 50);
 
         return rideDTO;

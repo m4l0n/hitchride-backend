@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: EhailingBackendApiApplication.java
+// Description: Main class of the application, entry point of the application
+// Last Modified: 22 July 2023
+
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

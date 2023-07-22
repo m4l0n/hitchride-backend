@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.mapping;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: GeoPointDeserializer.java
+// Description: Custom deserializer for GeoPoint object
+// Last Modified: 22 July 2023
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;

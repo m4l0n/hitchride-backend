@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: RewardServiceImpl.java
+// Description: Implementation of RewardService interface, that gets rewards list and allows users to redeem rewards
+// Last Modified: 22 July 2023
+
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.exceptions.HitchrideException;

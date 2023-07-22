@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: UserService.java
+// Description: An interface that consists of methods to be implemented by the UserService class
+// Last Modified: 22 July 2023
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.cloud.firestore.DocumentReference;
 import com.m4l0n.hitchride.pojos.HitchRideUser;

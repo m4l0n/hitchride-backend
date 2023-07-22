@@ -1,8 +1,12 @@
 package com.m4l0n.hitchride.controller;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: ReviewController.java
+// Description: This is a class that consists of all controller methods related to reviews
+// Last Modified: 22 July 2023
+
 import com.m4l0n.hitchride.dto.ReviewDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;
-import com.m4l0n.hitchride.pojos.Review;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;
 import com.m4l0n.hitchride.service.ReviewService;

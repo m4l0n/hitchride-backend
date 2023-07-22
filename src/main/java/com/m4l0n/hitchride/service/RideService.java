@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: RideService.java
+// Description: An interface that consists of methods to be implemented by the RideService class
+// Last Modified: 22 July 2023
+
 import com.google.cloud.firestore.DocumentReference;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.RideDTO;
@@ -23,7 +28,7 @@ public interface RideService {
 
     Ride getRideById(String rideId) throws ExecutionException, InterruptedException;
 
-    DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException;
+    DocumentReference getRideReferenceById(String rideId);
 
     Boolean deleteRideByDriverJourney(String driverJourneyId) throws ExecutionException, InterruptedException, FirebaseMessagingException;
 

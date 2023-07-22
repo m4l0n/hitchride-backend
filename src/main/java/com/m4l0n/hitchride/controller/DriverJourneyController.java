@@ -1,5 +1,9 @@
 package com.m4l0n.hitchride.controller;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: DriverJourneyController.java
+// Description: This is a class that consists of all controller methods for DriverJourney
+// Last Modified: 22 July 2023
 
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.dto.SearchRideCriteriaDTO;

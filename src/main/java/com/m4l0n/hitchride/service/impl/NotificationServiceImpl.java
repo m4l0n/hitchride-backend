@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: NotificationServiceImpl.java
+// Description: Implementation of NotificationService interface, that registers the FCM token and sends notifications
+// Last Modified: 22 July 2023
+
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -26,6 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public String registerFcmToken(String fcmToken) throws InterruptedException, ExecutionException {
+        // associate the fcm token with the user id
         String userId = authenticationService.getAuthenticatedUsername();
         Map<String, String> data = Map.of("fcmToken", fcmToken);
         notificationCollection.document(userId)

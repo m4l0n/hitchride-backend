@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.m4l0n</groupId>
-    <artifactId>hitchride</artifactId>
+    <artifactId>hitchride-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ehailing-backend-api</name>
     <description>ehailing-backend-api</description>

@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.mapping;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: RideMapper.java
+// Description: Mapper for Ride DTO and POJO
+// Last Modified: 22 July 2023
+
 import com.m4l0n.hitchride.dto.RideDTO;
 import com.m4l0n.hitchride.pojos.Ride;
 import com.m4l0n.hitchride.service.DriverJourneyService;

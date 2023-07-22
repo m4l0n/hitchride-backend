@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: DriverJourneyServiceImpl.java
+// Description: Implementation of DriverJourneyService interface, which contains methods to create, search and accept driver journeys
+// Last Modified: 22 July 2023
+
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
@@ -112,30 +117,38 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
     public CompletableFuture<List<DriverJourneyDTO>> searchRidesFromDriverJourneys(SearchRideCriteriaDTO searchRideCriteriaDTO) throws Exception {
         SearchRideCriteria searchRideCriteria = searchRideCriteriaMapper.mapDtoToPojo(searchRideCriteriaDTO);
         CompletableFuture<List<DriverJourneyDTO>> result = new CompletableFuture<>();
+        // Get all driver journeys from the future first
         List<DriverJourney> driverJourneys = getDriverJourneysWithTimestamp(searchRideCriteria.getSearchRideTimestampCriteria());
+        // If no future driver journeys, return empty list
         if (driverJourneys.isEmpty()) {
             result.complete(Collections.emptyList());
             return result;
         }
         List<DriverJourneyDTO> suitableRides = Collections.synchronizedList(new ArrayList<>());
-
+        // Create a counter to keep track of the number of driver journeys left
         AtomicInteger counter = new AtomicInteger(driverJourneys.size());
 
         for (DriverJourney driverJourney : driverJourneys) {
+            // First calculate the distance between the origin of the driver journey and the search ride criteria
             googleMapsApiClient.getDistance(driverJourney.getDjOriginDestination()
                             .getOrigin(), searchRideCriteria.getSearchRideLocationCriteria()
                             .getOrigin())
                     .thenAccept(originDistance -> {
+                        // Then calculate the distance between the destination of the driver journey and the search ride criteria
                         googleMapsApiClient.getDistance(driverJourney.getDjOriginDestination()
                                         .getDestination(), searchRideCriteria.getSearchRideLocationCriteria()
                                         .getDestination())
                                 .thenAccept(destinationDistance -> {
+                                    // If the distance between the origin of the driver journey and the search ride criteria is less than 1.0 km
+                                    // and the distance between the destination of the driver journey and the search ride criteria is less than the
+                                    // destination range of the driver journey, then add the driver journey to the list of suitable rides
                                     if (originDistance <= 1.0 && destinationDistance <= driverJourney.getDjDestinationRange()) {
                                         DriverJourneyDTO driverJourneyDTO = driverJourneyMapper.mapPojoToDto(driverJourney);
                                         suitableRides.add(driverJourneyDTO);
                                     }
 
                                     if (counter.decrementAndGet() == 0) {
+                                        // The counter is 0, which means all driver journeys have been processed
                                         result.complete(suitableRides);
                                     }
                                 });
@@ -147,9 +160,6 @@ public class DriverJourneyServiceImpl implements DriverJourneyService {
 
     @Override
     public void deleteDriverJourney(String djId) throws ExecutionException, InterruptedException, FirebaseMessagingException {
-        HitchRideUser currentLoggedInUser = userService.loadUserByUsername(authenticationService.getAuthenticatedUsername());
-        DriverJourney driverJourney = getDriverJourneyById(djId);
-
         RideDTO rideDTO = rideService.getRideByDriverJourney(djId);
         if (rideDTO != null) {
             throw new HitchrideException("Cannot delete driver journey with active booking.");

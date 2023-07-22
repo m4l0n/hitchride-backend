@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.configuration;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: GoogleMapsConfig.java
+// Description: This is a class that configures the Google Maps api
+// Last Modified: 22 July 2023
+
 import com.google.maps.GeoApiContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

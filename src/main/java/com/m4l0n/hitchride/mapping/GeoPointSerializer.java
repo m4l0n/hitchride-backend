@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.mapping;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: GeoPointSerializer.java
+// Description: Custom serializer for GeoPoint object
+// Last Modified: 22 July 2023
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;

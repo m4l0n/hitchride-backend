@@ -1,5 +1,11 @@
 package com.m4l0n.hitchride.configuration.auth;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: FirebaseFilter.java
+// Description: This is a class that filters requests to the server, and sets the security context of the request
+// Last Modified: 22 July 2023
+
+
 import com.google.firebase.auth.FirebaseToken;
 import com.m4l0n.hitchride.service.FirebaseService;
 import jakarta.servlet.FilterChain;

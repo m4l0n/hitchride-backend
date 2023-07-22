@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.mapping;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: DriverJourneyMapper.java
+// Description: Mapper for DriverJourney DTO and POJO
+// Last Modified: 22 July 2023
+
 import com.m4l0n.hitchride.dto.DriverJourneyDTO;
 import com.m4l0n.hitchride.pojos.DriverJourney;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
