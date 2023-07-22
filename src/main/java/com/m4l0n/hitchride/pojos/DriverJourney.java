@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.pojos;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: DriverJourney.java
+// Description: POJO that represents the driver journey information
+// Last Modified: 22 July 2023
+
 import com.m4l0n.hitchride.enums.DJStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;

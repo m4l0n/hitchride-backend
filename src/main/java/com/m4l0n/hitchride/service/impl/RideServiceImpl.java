@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: RideServiceImpl.java
+// Description: Implementation of RideService interface, that handles the CRUD operations for Ride
+// Last Modified: 22 July 2023
+
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -166,7 +171,7 @@ public class RideServiceImpl implements RideService {
     }
 
     @Override
-    public DocumentReference getRideReferenceById(String rideId) throws ExecutionException, InterruptedException {
+    public DocumentReference getRideReferenceById(String rideId) {
         return rideRef.document(rideId);
     }
 
@@ -211,6 +216,8 @@ public class RideServiceImpl implements RideService {
 
         //award users 50 points for completing a ride
         userService.updateUserPoints(rideDTO.ridePassenger()
+                .getUserId(), 50);
+        userService.updateUserPoints(rideDTO.rideDriverJourney().djDriver()
                 .getUserId(), 50);
 
         return rideDTO;
@@ -272,6 +279,7 @@ public class RideServiceImpl implements RideService {
     }
 
     private boolean bookRideAndAcceptDriverJourney(Ride ride) throws InterruptedException, ExecutionException, TimeoutException {
+        // Create a lock to ensure mutual exclusion
         String lockId = UUID.randomUUID()
                 .toString();
         lockRef
@@ -289,6 +297,7 @@ public class RideServiceImpl implements RideService {
 
     private boolean handleTransaction(Ride ride, String lockId) throws InterruptedException, ExecutionException, TimeoutException {
         log.info("Starting transaction for booking ride: {}", ride.getRideId());
+        // Start a transaction to book the ride and accept the driver journey
         return firestore.runTransaction(transaction -> {
                     // Get lock document and check if it exists
                     DocumentSnapshot lockSnapshot = transaction.get(lockRef

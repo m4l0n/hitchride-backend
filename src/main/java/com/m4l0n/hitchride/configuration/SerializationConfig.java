@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.configuration;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: SerializationConfig.java
+// Description: This is a class that configures the serialization of certain objects when they are being sent to the client
+// Last Modified: 22 July 2023
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

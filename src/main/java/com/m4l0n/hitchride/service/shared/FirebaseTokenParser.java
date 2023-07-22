@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.shared;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: FirebaseTokenParser.java
+// Description: Service that parses the JWT token
+// Last Modified: 22 July 2023
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;

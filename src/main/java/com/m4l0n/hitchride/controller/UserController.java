@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.controller;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: UserController.java
+// Description: This is a class that consists of all controller methods related to users
+// Last Modified: 22 July 2023
+
 import com.m4l0n.hitchride.exceptions.HitchrideException;
 import com.m4l0n.hitchride.pojos.HitchRideUser;
 import com.m4l0n.hitchride.response.Response;

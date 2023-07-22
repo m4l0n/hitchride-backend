@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.validations;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: UserValidator.java
+// Description: This is a class that validates the user input
+// Last Modified: 13 July 2023
+
 import com.m4l0n.hitchride.pojos.HitchRideUser;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,8 +38,8 @@ public class UserValidator {
     }
 
     private void validateImageFileSize(StringBuilder errors, MultipartFile imageFile) {
-        if (imageFile.getSize() > 1000000)
-            errors.append("File size is too large. ");
+        if (imageFile.getSize() * 0.00000095367432 > 10)
+            errors.append("File size cannot be larger than 10 MB. ");
     }
 
     private void validateImageFileExtension(StringBuilder errors, MultipartFile imageFile) {

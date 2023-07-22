@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.mapping;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: OriginDestinationMapper.java
+// Description: Mapper for OriginDestination DTO and POJO
+// Last Modified: 22 July 2023
+
 import com.google.maps.model.PlaceDetails;
 import com.m4l0n.hitchride.dto.OriginDestinationDTO;
 import com.m4l0n.hitchride.pojos.LocationData;

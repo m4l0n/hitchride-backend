@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.configuration;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: SwaggerConfig.java
+// Description: This is a class that configures the Swagger API
+// Last Modified: 22 July 2023
+
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;

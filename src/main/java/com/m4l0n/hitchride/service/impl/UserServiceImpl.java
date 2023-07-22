@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: UserServiceImpl.java
+// Description: Implementation of UserService interface, that handles user profile and driver info
+// Last Modified: 22 July 2023
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

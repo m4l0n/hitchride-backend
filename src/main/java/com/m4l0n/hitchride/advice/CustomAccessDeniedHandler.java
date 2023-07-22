@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.advice;
 
+// Programmer Name: Ang Ru Xian
+// Program Name: CustomAccessDeniedHandler.java
+// Description: This is a class that handles the access denied exception
+// Last Modified: 13 July 2023
+
 import com.google.gson.Gson;
 import com.m4l0n.hitchride.response.Response;
 import com.m4l0n.hitchride.response.ResponseAPI;

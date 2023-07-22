@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.response;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: StatusCode.java
+// Description: An enum class that represents the status code of a response
+// Last Modified: 22 July 2023
+
 import lombok.Getter;
 
 @Getter

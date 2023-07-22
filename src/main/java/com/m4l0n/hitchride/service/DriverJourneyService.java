@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: DriverJourneyService.java
+// Description: An interface that consists of methods to be implemented by the DriverJourneyService class
+// Last Modified: 22 July 2023
+
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Transaction;
 import com.google.firebase.messaging.FirebaseMessagingException;

@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.service.impl;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: ReviewServiceImpl.java
+// Description: Implementation of ReviewService interface, that performs CRUD operations on reviews
+// Last Modified: 22 July 2023
+
 import com.google.cloud.firestore.*;
 import com.m4l0n.hitchride.dto.ReviewDTO;
 import com.m4l0n.hitchride.exceptions.HitchrideException;

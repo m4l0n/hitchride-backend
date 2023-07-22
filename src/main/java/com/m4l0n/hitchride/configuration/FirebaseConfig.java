@@ -1,5 +1,10 @@
 package com.m4l0n.hitchride.configuration;
 
+// Programmer's Name: Ang Ru Xian
+// Program Name: FirebaseConfig.java
+// Description: This is a class that configures the firebase
+// Last Modified: 22 July 2023
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.storage.Bucket;
