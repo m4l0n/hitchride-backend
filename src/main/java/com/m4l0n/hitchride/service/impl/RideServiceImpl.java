@@ -124,11 +124,14 @@ public class RideServiceImpl implements RideService {
         DocumentReference userRef = userService.getUserDocumentReference(currentLoggedInUser);
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getFutureDriverJourneyRefs();
 
-        ApiFuture<QuerySnapshot> querySnapshot = rideRef
-                .whereEqualTo("rideStatus", RideStatus.ACTIVE)
-                .whereEqualTo("ridePassenger", userRef)
-                .whereIn("rideDriverJourney", driverJourneyRefs)
-                .get();
+        Query partialQuery = rideRef.whereEqualTo("rideStatus", RideStatus.ACTIVE)
+                .whereEqualTo("ridePassenger", userRef);
+
+        if (!driverJourneyRefs.isEmpty()) {
+            partialQuery = partialQuery.whereIn("rideDriverJourney", driverJourneyRefs);
+        }
+
+        ApiFuture<QuerySnapshot> querySnapshot = partialQuery.get();
         return getRideDTOS(querySnapshot);
     }
 
@@ -217,7 +220,8 @@ public class RideServiceImpl implements RideService {
         //award users 50 points for completing a ride
         userService.updateUserPoints(rideDTO.ridePassenger()
                 .getUserId(), 50);
-        userService.updateUserPoints(rideDTO.rideDriverJourney().djDriver()
+        userService.updateUserPoints(rideDTO.rideDriverJourney()
+                .djDriver()
                 .getUserId(), 50);
 
         return rideDTO;
