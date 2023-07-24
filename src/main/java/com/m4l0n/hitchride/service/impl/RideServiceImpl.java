@@ -216,7 +216,7 @@ public class RideServiceImpl implements RideService {
                 .get();
 
         notificationService.sendNotification(rideDTO.ridePassenger()
-                .getUserId(), "Ride Completed", "Your ride has been completed!", "review");
+                .getUserId(), "Ride Completed", "Your ride is completed. Leave a review now!", "review");
 
         //award users 50 points for completing a ride
         userService.updateUserPoints(rideDTO.ridePassenger()
