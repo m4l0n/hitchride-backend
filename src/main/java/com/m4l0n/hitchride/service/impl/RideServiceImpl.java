@@ -124,12 +124,13 @@ public class RideServiceImpl implements RideService {
         DocumentReference userRef = userService.getUserDocumentReference(currentLoggedInUser);
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getFutureDriverJourneyRefs();
 
-        Query partialQuery = rideRef.whereEqualTo("rideStatus", RideStatus.ACTIVE)
-                .whereEqualTo("ridePassenger", userRef);
-
-        if (!driverJourneyRefs.isEmpty()) {
-            partialQuery = partialQuery.whereIn("rideDriverJourney", driverJourneyRefs);
+        if (driverJourneyRefs.isEmpty()) {
+            return List.of();
         }
+
+        Query partialQuery = rideRef.whereEqualTo("rideStatus", RideStatus.ACTIVE)
+                .whereEqualTo("ridePassenger", userRef)
+                .whereIn("rideDriverJourney", driverJourneyRefs);
 
         ApiFuture<QuerySnapshot> querySnapshot = partialQuery.get();
         return getRideDTOS(querySnapshot);
