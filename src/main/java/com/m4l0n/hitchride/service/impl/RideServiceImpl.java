@@ -109,6 +109,10 @@ public class RideServiceImpl implements RideService {
 
         List<DocumentReference> driverJourneyRefs = driverJourneyService.getDriverJourneyRefsByDriverUserId(currentLoggedInUser);
 
+        if (driverJourneyRefs.isEmpty()) {
+            return List.of();
+        }
+
         ApiFuture<QuerySnapshot> querySnapshot = rideRef
                 .whereEqualTo("rideStatus", RideStatus.COMPLETED.toString())
                 .whereIn("rideDriverJourney", driverJourneyRefs)
